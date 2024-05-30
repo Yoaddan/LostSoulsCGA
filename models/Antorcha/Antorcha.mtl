@@ -1,0 +1,46 @@
+# Blender 4.0.2 MTL File: 'LaberintoTextura.blend'
+# www.blender.org
+
+newmtl AM_A_1000_0
+Ns 31.372540
+Ka 1.000000 1.000000 1.000000
+Ks 1.000000 1.000000 1.000000
+Ke 0.000000 0.000000 0.000000
+Ni 1.000000
+d 1.000000
+illum 2
+map_Kd m11_wall_stone_snow.png
+map_Bump m11_wall_stone_snow_n.png
+
+newmtl AM_A_1000_1
+Ns 31.372540
+Ka 1.000000 1.000000 1.000000
+Ks 1.000000 1.000000 1.000000
+Ke 0.000000 0.000000 0.000000
+Ni 1.000000
+d 1.000000
+illum 2
+map_Kd m11_concrete_02.png
+map_Bump m11_concrete_02_n.png
+
+newmtl AM_A_1000_2
+Ns 31.372540
+Ka 1.000000 1.000000 1.000000
+Ks 1.000000 1.000000 1.000000
+Ke 0.000000 0.000000 0.000000
+Ni 1.000000
+d 1.000000
+illum 2
+map_Kd m11_section.png
+map_Bump m11_section_n.png
+
+newmtl AM_A_1000_3
+Ns 31.372540
+Ka 1.000000 1.000000 1.000000
+Ks 1.000000 1.000000 1.000000
+Ke 0.000000 0.000000 0.000000
+Ni 1.000000
+d 1.000000
+illum 2
+map_Kd m11_stair_spiral_pillar.png
+map_Bump m11_stair_spiral_pillar_n.png
