@@ -5,7 +5,7 @@ if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
     # Set the directory where DLLs are located
     set(CMAKE_DLLTOOLCHAIN_PREFIX "../dlls")
     include_directories(
-        12-ShadowMapping
+        Main
         ${CMAKE_SOURCE_DIR}/CGALib/include
         "/usr/include/freetype2" 
         "../external/assimp/include"
