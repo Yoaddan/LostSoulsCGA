@@ -1158,7 +1158,7 @@ void applicationLoop() {
 
 	// Posiciones y estados iniciales.
 	modelMatrixMainCharacter = glm::translate(modelMatrixMainCharacter, glm::vec3(34.677f, 0.05f, 37.0987f));
-	//modelMatrixMainCharacter = glm::translate(modelMatrixMainCharacter, glm::vec3(-18.0f, 0.05f, 0.7f));
+	//modelMatrixMainCharacter = glm::translate(modelMatrixMainCharacter, glm::vec3(25.0f, 0.05f, 0.7f));
 	modelMatrixMainCharacter = glm::rotate(modelMatrixMainCharacter, glm::radians(-90.0f), glm::vec3(0, 1, 0));
 
 	//Guardias
@@ -1571,6 +1571,48 @@ void applicationLoop() {
 		fantasmaCollider.e = fantasma.getObb().e * glm::vec3(1.0, 1.0, 1.0);
 		fantasmaCollider.c = glm::vec3(modelmatrixColliderFantasma[3]);
 		addOrUpdateColliders(collidersOBB, "fantasma", fantasmaCollider, modelMatrixFantasma);
+//abcdef
+		//Collider Guardia 1
+		AbstractModel::OBB coliderGuardia1;
+		glm::mat4 modelMatrixColliderGuardia1 = glm::mat4(modelMatrixGuardia1);
+		// Set the orientation of collider before doing the scale
+		coliderGuardia1.u = glm::quat_cast(modelMatrixColliderGuardia1);
+		modelMatrixColliderGuardia1 = glm::scale(modelMatrixColliderGuardia1, glm::vec3(1.0, 1.0, 1.0));
+		modelMatrixColliderGuardia1 = glm::translate(modelMatrixColliderGuardia1,
+				glm::vec3(guardia1.getObb().c.x,
+						guardia1.getObb().c.y,
+						guardia1.getObb().c.z));
+		coliderGuardia1.e = guardia1.getObb().e * glm::vec3(1.0, 1.0, 1.0);
+		coliderGuardia1.c = glm::vec3(modelMatrixColliderGuardia1[3]);
+		addOrUpdateColliders(collidersOBB, "Guardia1", coliderGuardia1, modelMatrixGuardia1);
+
+				//Collider Guardia 2
+		AbstractModel::OBB coliderGuardia2;
+		glm::mat4 modelMatrixColliderGuardia2 = glm::mat4(modelMatrixGuardia2);
+		// Set the orientation of collider before doing the scale
+		coliderGuardia2.u = glm::quat_cast(modelMatrixColliderGuardia2);
+		modelMatrixColliderGuardia2 = glm::scale(modelMatrixColliderGuardia2, glm::vec3(1.0, 1.0, 1.0));
+		modelMatrixColliderGuardia2 = glm::translate(modelMatrixColliderGuardia2,
+				glm::vec3(guardia2.getObb().c.x,
+						guardia2.getObb().c.y,
+						guardia2.getObb().c.z));
+		coliderGuardia2.e = guardia2.getObb().e * glm::vec3(1.0, 1.0, 1.0);
+		coliderGuardia2.c = glm::vec3(modelMatrixColliderGuardia2[3]);
+		addOrUpdateColliders(collidersOBB, "Guardia2", coliderGuardia2, modelMatrixGuardia2);
+
+				//Collider Guardia 3
+		AbstractModel::OBB coliderGuardia3;
+		glm::mat4 modelMatrixColliderGuardia3 = glm::mat4(modelMatrixGuardia1);
+		// Set the orientation of collider before doing the scale
+		coliderGuardia3.u = glm::quat_cast(modelMatrixColliderGuardia3);
+		modelMatrixColliderGuardia3 = glm::scale(modelMatrixColliderGuardia3, glm::vec3(1.0, 1.0, 1.0));
+		modelMatrixColliderGuardia3 = glm::translate(modelMatrixColliderGuardia3,
+				glm::vec3(guardia3.getObb().c.x,
+						guardia3.getObb().c.y,
+						guardia3.getObb().c.z));
+		coliderGuardia3.e = guardia3.getObb().e * glm::vec3(1.0, 1.0, 1.0);
+		coliderGuardia3.c = glm::vec3(modelMatrixColliderGuardia3[3]);
+		addOrUpdateColliders(collidersOBB, "Guardia3", coliderGuardia3, modelMatrixGuardia3);
 
 		/*******************************************
 		 * Render de colliders
@@ -1640,6 +1682,13 @@ void applicationLoop() {
 				for (auto jt = collidersOBB.begin(); jt != collidersOBB.end(); ++jt) {
 					if (jt->first == "main" && testOBBOBB(std::get<0>(it->second), std::get<0>(jt->second))) {
 						std::cout << "El fantasma ha colisionado con el jugador. Cerrando el juego..." << std::endl;
+						exit(1); // Terminar el juego al detectar colisión con el fantasma
+					}
+				}
+			}else if (it->first == "Guardia1" || it->first == "Guardia2" || it->first == "Guardia3") {
+				for (auto jt = collidersOBB.begin(); jt != collidersOBB.end(); ++jt) {
+					if (jt->first == "main" && testOBBOBB(std::get<0>(it->second), std::get<0>(jt->second))) {
+						std::cout << "El Guardia ha colisionado con el jugador. Cerrando el juego..." << std::endl;
 						exit(1); // Terminar el juego al detectar colisión con el fantasma
 					}
 				}
@@ -1861,7 +1910,6 @@ void applicationLoop() {
 			contAvanceG2 = 0.0;
 			stateG2 = 0;
 			posG2 ++;
-			posG1 ++;
 		}
 		break;
 		default:
