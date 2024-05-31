@@ -87,7 +87,9 @@ Box boxViewDepth;
 // Modelos externos
 Model laberinto; //Laberinto principal.
 Model fantasma; //Enemigo que atraviesa paredes.
-Model guardia; //Enemigo con ruta predefinida.
+Model guardia1; //Enemigo con ruta predefinida.
+Model guardia2;
+Model guardia3;
 Model modelAntorcha; //Antorchas.
 Model tesoro;
 Model fuego; //Fuego animado.
@@ -142,7 +144,9 @@ int lastMousePosY, offsetY = 0;
 // Model matrix definitions
 glm::mat4 modelMatrixLaberinto = glm::mat4(1.0f);
 glm::mat4 modelMatrixFantasma = glm::mat4(1.0f);
-glm::mat4 modelMatrixGuardia = glm::mat4(1.0f);
+glm::mat4 modelMatrixGuardia1 = glm::mat4(1.0f);
+glm::mat4 modelMatrixGuardia2 = glm::mat4(1.0f);
+glm::mat4 modelMatrixGuardia3 = glm::mat4(1.0f);
 glm::mat4 modelMatrixHada = glm::mat4(1.0f);
 
 glm::mat4 modelMatrixMainCharacter = glm::mat4(1.0f);
@@ -325,8 +329,12 @@ void init(int width, int height, std::string strTitle, bool bFullScreen) {
 	fantasma.setShader(&shaderMulLighting);
 
 	// Guardia
-	guardia.loadModel("../models/Guardia/c1530.obj");
-	guardia.setShader(&shaderMulLighting);
+	guardia1.loadModel("../models/Guardia/c1530.obj");
+	guardia1.setShader(&shaderMulLighting);
+	guardia2.loadModel("../models/Guardia/c1530.obj");
+	guardia2.setShader(&shaderMulLighting);
+	guardia3.loadModel("../models/Guardia/c1530.obj");
+	guardia3.setShader(&shaderMulLighting);
 
 	// Antorcha
 	modelAntorcha.loadModel("../models/Antorcha/Antorcha.obj");	
@@ -694,7 +702,9 @@ void destroy() {
 	// Custom objects Delete
 	laberinto.destroy();
 	fantasma.destroy();
-	guardia.destroy();
+	guardia1.destroy();
+	guardia2.destroy();
+	guardia3.destroy();
 	modelAntorcha.destroy();
 	tesoro.destroy();
 	fuego.destroy();
@@ -858,18 +868,18 @@ bool processInput(bool continueApplication) {
 
 	// Controles de personaje principal
 	if (glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS){
-		modelMatrixMainCharacter = glm::rotate(modelMatrixMainCharacter, 0.22f, glm::vec3(0, 1, 0));
+		modelMatrixMainCharacter = glm::rotate(modelMatrixMainCharacter, 0.10f, glm::vec3(0, 1, 0));
 		animationMainCharacterIndex = 0;
 	} else if (glfwGetKey(window, GLFW_KEY_RIGHT) == GLFW_PRESS){
-		modelMatrixMainCharacter = glm::rotate(modelMatrixMainCharacter, -0.22f, glm::vec3(0, 1, 0));
+		modelMatrixMainCharacter = glm::rotate(modelMatrixMainCharacter, -0.10f, glm::vec3(0, 1, 0));
 		animationMainCharacterIndex = 0;
 	}
 	if (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS){
-		modelMatrixMainCharacter = glm::translate(modelMatrixMainCharacter, glm::vec3(0.0, 0.0, 1.02));
+		modelMatrixMainCharacter = glm::translate(modelMatrixMainCharacter, glm::vec3(0.0, 0.0, 0.5));
 		animationMainCharacterIndex = 0;
 	}
 	else if (glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS){
-		modelMatrixMainCharacter = glm::translate(modelMatrixMainCharacter, glm::vec3(0.0, 0.0, -1.02));
+		modelMatrixMainCharacter = glm::translate(modelMatrixMainCharacter, glm::vec3(0.0, 0.0,-0.5));
 		animationMainCharacterIndex = 0;
 	}
 
@@ -903,7 +913,9 @@ void prepareScene(){
 	fantasma.setShader(&shaderMulLighting);
 
 	// Guardia
-	guardia.setShader(&shaderMulLighting);
+	guardia1.setShader(&shaderMulLighting);
+	guardia2.setShader(&shaderMulLighting);
+	guardia3.setShader(&shaderMulLighting);
 
 }
 
@@ -933,7 +945,9 @@ void prepareDepthScene(){
 	fantasma.setShader(&shaderDepth);
 
 	// Guardia
-	guardia.setShader(&shaderDepth);
+	guardia1.setShader(&shaderDepth);
+	guardia2.setShader(&shaderDepth);
+	guardia3.setShader(&shaderDepth);
 
 }
 
@@ -1019,9 +1033,17 @@ void renderSolidScene(){
 	modelMatrixHada = glm::translate(modelMatrixHada, glm::vec3(0.174625f,1.552f, -0.5f));
 	hada.render(modelMatrixHada);
 
-	modelMatrixGuardia[3][1] = terrain.getHeightTerrain(modelMatrixGuardia[3][0], modelMatrixGuardia[3][2]);
-	glm::mat4 modelMatrixGuardiaBody = glm::mat4(modelMatrixGuardia);
-	guardia.render(modelMatrixGuardiaBody);
+	modelMatrixGuardia1[3][1] = terrain.getHeightTerrain(modelMatrixGuardia1[3][0], modelMatrixGuardia1[3][2]);
+	glm::mat4 modelMatrixGuardia1Body = glm::mat4(modelMatrixGuardia1);
+	guardia1.render(modelMatrixGuardia1Body);
+
+	modelMatrixGuardia2[3][1] = terrain.getHeightTerrain(modelMatrixGuardia2[3][0], modelMatrixGuardia2[3][2]);
+	glm::mat4 modelMatrixGuardia2Body = glm::mat4(modelMatrixGuardia2);
+	guardia2.render(modelMatrixGuardia2Body);
+
+	modelMatrixGuardia3[3][1] = terrain.getHeightTerrain(modelMatrixGuardia3[3][0], modelMatrixGuardia3[3][2]);
+	glm::mat4 modelMatrixGuardia3Body = glm::mat4(modelMatrixGuardia3);
+	guardia3.render(modelMatrixGuardia3Body);
 
 	// Interpolación lineal para mover el fantasma hacia la posición de Mayow
 	float interpolationFactor = 0.001f; // Ajusta este valor para cambiar la velocidad de seguimiento
@@ -1037,12 +1059,12 @@ void renderSolidScene(){
 	rotationMatrixFantasma[0] = glm::vec4(rightFantasma, 0.0f);
 	rotationMatrixFantasma[1] = glm::vec4(upFantasma, 0.0f);
 	rotationMatrixFantasma[2] = glm::vec4(directionFantasma, 0.0f);
-
+/*
 	// Actualizar la posición y orientación del fantasma
 	modelMatrixFantasma[3] = glm::vec4(newPositionFantasma, 1.0f);
 	modelMatrixFantasma = glm::translate(glm::mat4(1.0f), newPositionFantasma) * rotationMatrixFantasma;
 
-
+*/
 	modelMatrixFantasma[3][1] = terrain.getHeightTerrain(modelMatrixFantasma[3][0], modelMatrixFantasma[3][2]);
 	glm::mat4 modelMatrixFantasmaBody = glm::mat4(modelMatrixFantasma);
 	fantasma.render(modelMatrixFantasmaBody);
@@ -1106,15 +1128,51 @@ void renderScene(){
 }
 
 void applicationLoop() {
+	
 	bool psi = true;
 
 	glm::vec3 axis;
 	glm::vec3 target;
 	float angleTarget;
 
+	int stateG1 = 0;
+	float avanceG1 = 0.05;
+	float maxAvanceG1 = 0.0;
+	float contAvanceG1 =0.0;
+	float giroG1 = 1.0;
+	int posG1 = 0;
+
+	int stateG2 = 0;
+	float avanceG2 = 0.05;
+	float maxAvanceG2 = 0.0;
+	float contAvanceG2 =0.0;
+	float giroG2 = 1.0;
+	int posG2 = 0;
+
+	int stateG3 = 0;
+	float avanceG3 = 0.05;
+	float maxAvanceG3 = 0.0;
+	float contAvanceG3 =0.0;
+	float giroG3 = 1.0;
+	int posG3 = 0;
+
 	// Posiciones y estados iniciales.
 	modelMatrixMainCharacter = glm::translate(modelMatrixMainCharacter, glm::vec3(34.677f, 0.05f, 37.0987f));
+	//modelMatrixMainCharacter = glm::translate(modelMatrixMainCharacter, glm::vec3(-18.0f, 0.05f, 0.7f));
 	modelMatrixMainCharacter = glm::rotate(modelMatrixMainCharacter, glm::radians(-90.0f), glm::vec3(0, 1, 0));
+
+	//Guardias
+	modelMatrixGuardia1 = glm::translate(modelMatrixGuardia1, glm::vec3(29.0f, 0.05f, -5.0f));
+	modelMatrixGuardia1 = glm::rotate(modelMatrixGuardia1, glm::radians(180.0f), glm::vec3(0, 1, 0));
+	modelMatrixGuardia1 = glm::scale(modelMatrixGuardia1, glm::vec3(1.45));
+
+	modelMatrixGuardia2 = glm::translate(modelMatrixGuardia2, glm::vec3(-28.0f, 0.05f, 35.0f));
+	modelMatrixGuardia2 = glm::rotate(modelMatrixGuardia2, glm::radians(-90.0f), glm::vec3(0, 1, 0));
+	modelMatrixGuardia2 = glm::scale(modelMatrixGuardia2, glm::vec3(1.45));
+
+	modelMatrixGuardia3 = glm::translate(modelMatrixGuardia3, glm::vec3(-18.0f, 0.05f, 0.7f));
+	modelMatrixGuardia3 = glm::rotate(modelMatrixGuardia3, glm::radians(90.0f), glm::vec3(0, 1, 0));
+	modelMatrixGuardia3 = glm::scale(modelMatrixGuardia3, glm::vec3(1.45));
 
 	lastTime = TimeManager::Instance().GetTime();
 
@@ -1205,13 +1263,13 @@ void applicationLoop() {
 		 * Propiedades Luz direccional
 		 *******************************************/
 		shaderMulLighting.setVectorFloat3("viewPos", glm::value_ptr(camera->getPosition()));
-		shaderMulLighting.setVectorFloat3("directionalLight.light.ambient", glm::value_ptr(glm::vec3(0.0, 0.0, 0.0)));
+		shaderMulLighting.setVectorFloat3("directionalLight.light.ambient", glm::value_ptr(glm::vec3(0.5, 0.5, 0.5)));
 		shaderMulLighting.setVectorFloat3("directionalLight.light.diffuse", glm::value_ptr(glm::vec3(0.1, 0.1, 0.1)));
 		shaderMulLighting.setVectorFloat3("directionalLight.light.specular", glm::value_ptr(glm::vec3(0.0, 0.0, 0.0)));
 		shaderMulLighting.setVectorFloat3("directionalLight.direction", glm::value_ptr(glm::vec3(-0.7071, -0.7071, -0.7071)));
 
 		shaderTerrain.setVectorFloat3("viewPos", glm::value_ptr(camera->getPosition()));
-		shaderTerrain.setVectorFloat3("directionalLight.light.ambient", glm::value_ptr(glm::vec3(0.0, 0.0, 0.0)));
+		shaderTerrain.setVectorFloat3("directionalLight.light.ambient", glm::value_ptr(glm::vec3(0.5, 0.5, 0.5)));
 		shaderTerrain.setVectorFloat3("directionalLight.light.diffuse", glm::value_ptr(glm::vec3(0.1, 0.1, 0.1)));
 		shaderTerrain.setVectorFloat3("directionalLight.light.specular", glm::value_ptr(glm::vec3(0.0, 0.0, 0.0)));
 		shaderTerrain.setVectorFloat3("directionalLight.direction", glm::value_ptr(glm::vec3(-0.7071, -0.7071, -0.7071)));
@@ -1307,12 +1365,13 @@ void applicationLoop() {
 		glBindTexture(GL_TEXTURE_2D, textureActivaID);
 		shaderTexture.setInt("outTexture", 0);
 		boxIntro.render();
-		glfwSwapBuffers(window);
+		//glfwSwapBuffers(window);
 
 		// Restaurar el estado después de renderizar el GUI
 		glEnable(GL_DEPTH_TEST);
 		glDisable(GL_BLEND);
 
+		
 		/*
 		// Para debug
 		glViewport(0,0, screenWidth, screenHeight);
@@ -1675,7 +1734,197 @@ void applicationLoop() {
 		boxCollider.setColor(glm::vec4(1.0, 1.0, 1.0, 1.0));*/
 		
 		/**********Maquinas de estado*************/
-		
+		//Guardia 1
+		switch (stateG1)
+		{
+		case 0:
+			if(posG1 == 0 || posG1 == 2 || posG1 == 29 || posG1 == 31){
+				//printf("%i",posG1);
+				maxAvanceG1 = 8.0;
+				stateG1 = 1;
+			}
+			//izquierda
+			if(posG1 == 1 || posG1==5 || posG1==9 || posG1 == 15 || posG1 == 16 || posG1 == 18 || posG1 == 20
+			|| posG1 == 24 || posG1 == 28){
+				stateG1 = 2;
+			}
+			//Derecha
+			if(posG1 == 3 || posG1==7 || posG1==11 || posG1==13 || posG1 == 22 || posG1 == 26
+			|| posG1 == 30 || posG1 == 32 || posG1 == 33){
+				stateG1 = 3;
+			}
+			//av
+			if (posG1==4 || posG1==6 || posG1==8 || posG1==10 || posG1 == 21 || posG1 == 23 || posG1 == 25
+			|| posG1 == 27)
+			{
+				maxAvanceG1 = 4.0;
+				stateG1 = 1;
+			}
+			if (posG1==12 || posG1 == 19)
+			{
+				maxAvanceG1 = 4.5;
+				stateG1 = 1;
+			}
+			if (posG1 == 14 || posG1 == 17){
+				maxAvanceG1 = 10.0;
+				stateG1 = 1;
+			}
+			
+			if(posG1 == 34){
+				posG1 = 0;
+			}
+			break;
+		//Avanzar
+		case 1:
+		modelMatrixGuardia1 = glm::translate(modelMatrixGuardia1, glm::vec3(0.0f, 0.0f, avanceG1));
+		contAvanceG1 += avanceG1;
+		//printf("%f",contAvanceG1);
+		if (contAvanceG1 > maxAvanceG1){
+			contAvanceG1 = 0.0;
+			stateG1 = 0;
+			posG1 ++;
+		}
+		break;
+		//Girlo izquierda
+		case 2:
+		modelMatrixGuardia1 = glm::rotate(modelMatrixGuardia1, glm::radians(giroG1), glm::vec3(0, 1, 0));
+		contAvanceG1 += giroG1;
+		if(contAvanceG1 >= 90){
+			contAvanceG1 = 0.0;
+			stateG1 = 0;
+			posG1 ++;
+		}
+		break;
+		//Girlo derecha
+		case 3:
+		modelMatrixGuardia1 = glm::rotate(modelMatrixGuardia1, glm::radians(-giroG1), glm::vec3(0, 1, 0));
+		contAvanceG1 += giroG1;
+		if(contAvanceG1 >= 90){
+			contAvanceG1 = 0.0;
+			stateG1 = 0;
+			posG1 ++;
+		}
+		break;
+		default:
+			break;
+		}
+
+		//Guardia 2
+		switch (stateG2)
+		{
+		case 0:
+			if(posG2 == 0 || posG2 == 4 || posG2 == 7 || posG2 == 11){
+				maxAvanceG2 = 5.0;
+				stateG2 = 1;
+			}
+			//Derecha
+			if(posG2 == 1 || posG2 == 3 || posG2 == 12 || posG2 == 13){
+				stateG2 = 3;
+			}
+			if(posG2 == 2  || posG2 == 9){
+				maxAvanceG2 = 12.0;
+				stateG2 = 1;
+			}
+			//Izquierda
+			if(posG2 == 5 || posG2 == 6 || posG2 == 8 || posG2 == 10){
+				stateG2 = 2;
+			}
+			if(posG2 == 14){
+				posG2 = 0;
+			}
+			break;
+		//Avanzar
+		case 1:
+		modelMatrixGuardia2 = glm::translate(modelMatrixGuardia2, glm::vec3(0.0f, 0.0f, avanceG2));
+		contAvanceG2 += avanceG2;
+		if (contAvanceG2 > maxAvanceG2){
+			contAvanceG2 = 0.0;
+			stateG2 = 0;
+			posG2 ++;
+		}
+		break;
+		//Girlo izquierda
+		case 2:
+		modelMatrixGuardia2 = glm::rotate(modelMatrixGuardia2, glm::radians(giroG2), glm::vec3(0, 1, 0));
+		contAvanceG2 += giroG2;
+		if(contAvanceG2 >= 90){
+			contAvanceG2 = 0.0;
+			stateG2 = 0;
+			posG2 ++;
+		}
+		break;
+		//Girlo derecha
+		case 3:
+		modelMatrixGuardia2 = glm::rotate(modelMatrixGuardia2, glm::radians(-giroG2), glm::vec3(0, 1, 0));
+		contAvanceG2 += giroG2;
+		if(contAvanceG2 >= 90){
+			contAvanceG2 = 0.0;
+			stateG2 = 0;
+			posG2 ++;
+			posG1 ++;
+		}
+		break;
+		default:
+			break;
+		}
+		//Guardia 3
+		switch (stateG3)
+		{
+		case 0:
+			if(posG3 == 0 || posG3 == 7 ){
+				maxAvanceG3 = 8.0;
+				stateG3 = 1;
+			}
+			//Izquierda
+			if(posG3 == 1 || posG3 == 8 || posG3 == 9){
+				stateG3 = 2;
+			}
+			if(posG3 == 2 || posG3 == 5){
+				maxAvanceG3 = 15.0;
+				stateG3 = 1;
+			}
+			//Derecha
+			if(posG3 == 3 || posG3 == 4 || posG3 == 6){
+				stateG3 = 3;
+			}
+			
+			if(posG3 == 10){
+				posG3 = 0;
+			}
+			break;
+		//Avanzar
+		case 1:
+		modelMatrixGuardia3 = glm::translate(modelMatrixGuardia3, glm::vec3(0.0f, 0.0f, avanceG3));
+		contAvanceG3 += avanceG3;
+		if (contAvanceG3 > maxAvanceG3){
+			contAvanceG3 = 0.0;
+			stateG3 = 0;
+			posG3 ++;
+		}
+		break;
+		//Girlo izquierda
+		case 2:
+		modelMatrixGuardia3 = glm::rotate(modelMatrixGuardia3, glm::radians(giroG3), glm::vec3(0, 1, 0));
+		contAvanceG3 += giroG3;
+		if(contAvanceG3 >= 90){
+			contAvanceG3 = 0.0;
+			stateG3 = 0;
+			posG3 ++;
+		}
+		break;
+		//Girlo derecha
+		case 3:
+		modelMatrixGuardia3 = glm::rotate(modelMatrixGuardia3, glm::radians(-giroG3), glm::vec3(0, 1, 0));
+		contAvanceG3 += giroG3;
+		if(contAvanceG3 >= 90){
+			contAvanceG3 = 0.0;
+			stateG3 = 0;
+			posG3 ++;
+		}
+		break;
+		default:
+			break;
+		}
 		//Para saber la posicion del personaje
 		//std::cout << " x " << modelMatrixMainCharacter[3].x << " y " << modelMatrixMainCharacter[3].y << " z " << modelMatrixMainCharacter[3].z << std::endl;
 
@@ -1695,17 +1944,6 @@ void applicationLoop() {
 		source0Pos[1] = modelMatrixFantasma[3].y;
 		source0Pos[2] = modelMatrixFantasma[3].z;
 		alSourcefv(source[0], AL_POSITION, source0Pos);
-
-		/*
-		source1Pos[0] = modelMatrixGuardian[3].x;
-		source1Pos[1] = modelMatrixGuardian[3].y;
-		source1Pos[2] = modelMatrixGuardian[3].z;
-		alSourcefv(source[1], AL_POSITION, source1Pos);
-		
-		source2Pos[0] = modelMatrixDart[3].x;
-		source2Pos[1] = modelMatrixDart[3].y;
-		source2Pos[2] = modelMatrixDart[3].z;
-		alSourcefv(source[2], AL_POSITION, source2Pos);*/
 
 		// Listener for the Thris person camera
 		listenerPos[0] = modelMatrixMainCharacter[3].x;
