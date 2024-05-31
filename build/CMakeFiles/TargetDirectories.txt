@@ -1,0 +1,8 @@
+C:/Users/Daniel/Desktop/LostSoulsCGA/build/CMakeFiles/edit_cache.dir
+C:/Users/Daniel/Desktop/LostSoulsCGA/build/CMakeFiles/rebuild_cache.dir
+C:/Users/Daniel/Desktop/LostSoulsCGA/build/CGALib/CMakeFiles/CGALib.dir
+C:/Users/Daniel/Desktop/LostSoulsCGA/build/CGALib/CMakeFiles/edit_cache.dir
+C:/Users/Daniel/Desktop/LostSoulsCGA/build/CGALib/CMakeFiles/rebuild_cache.dir
+C:/Users/Daniel/Desktop/LostSoulsCGA/build/Main/CMakeFiles/Main.dir
+C:/Users/Daniel/Desktop/LostSoulsCGA/build/Main/CMakeFiles/edit_cache.dir
+C:/Users/Daniel/Desktop/LostSoulsCGA/build/Main/CMakeFiles/rebuild_cache.dir
