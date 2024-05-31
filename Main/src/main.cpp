@@ -1680,7 +1680,7 @@ void applicationLoop() {
 		//std::cout << " x " << modelMatrixMainCharacter[3].x << " y " << modelMatrixMainCharacter[3].y << " z " << modelMatrixMainCharacter[3].z << std::endl;
 
 		//Contador de tesoros
-		std::cout << " Tesoros Counter: " << treasuresCollected << std::endl;
+		//std::cout << " Tesoros Counter: " << treasuresCollected << std::endl;
 
 		// Constantes de animaciones
 		animationMainCharacterIndex = 1;
