@@ -89,6 +89,7 @@ Model laberinto; //Laberinto principal.
 Model fantasma; //Enemigo que atraviesa paredes.
 Model guardia; //Enemigo con ruta predefinida.
 Model modelAntorcha; //Antorchas.
+Model tesoro;
 Model fuego; //Fuego animado.
 Model hada; //Hada.
 
@@ -107,6 +108,12 @@ GLuint textureInit1ID, textureInit2ID, textureActivaID, textureScreenID;
 GLuint textureCounter0ID, textureCounter1ID, textureCounter2ID, textureCounter3ID;
 
 int treasuresCollected = 0;
+//std::vector<int> treasuresToRemove;
+std::vector<std::string> treasuresToRemove;
+std::vector<int> indicesToRemove;
+std::vector<std::string> collidersToRemove;
+std::map<std::string, bool> collisionDetection;
+
 
 bool iniciaPartida = false, presionarOpcion = false;
 
@@ -155,6 +162,20 @@ std::vector<glm::vec3> torchesPosition = {
 std::vector<float> torchesOrientation = {
 	0.0, 90.0, 180.0, 270.0, 0.0, 90.0
 };
+
+//Posicion tesoros
+std::vector<glm::vec3> tesorosPosition = {
+	glm::vec3(29.8276, 0, 44.1803), // 1er tesoro
+	glm::vec3(36.4495, 0, 47.1476), // 2do tesoro
+	glm::vec3(44.9195, 0,42.7527)   // 3er tesoro
+};
+// Orientación tesoros
+std::vector<float> tesorosOrientation = {
+	0.0, -90.0, 180.0
+};
+
+std::vector<bool> tesorosRecogidos(tesorosPosition.size(), false);
+
 
 double deltaTime;
 double currTime, lastTime;
@@ -308,8 +329,12 @@ void init(int width, int height, std::string strTitle, bool bFullScreen) {
 	guardia.setShader(&shaderMulLighting);
 
 	// Antorcha
-	modelAntorcha.loadModel("../models/Antorcha/Antorcha.obj");
+	modelAntorcha.loadModel("../models/Antorcha/Antorcha.obj");	
 	modelAntorcha.setShader(&shaderMulLighting);
+
+	// Tesoro
+	tesoro.loadModel("../models/Chest/Chest.obj");
+	tesoro.setShader(&shaderMulLighting);
 
 	// Fuego
 	fuego.loadModel("../models/Fuego/Fuego.fbx");
@@ -671,6 +696,7 @@ void destroy() {
 	fantasma.destroy();
 	guardia.destroy();
 	modelAntorcha.destroy();
+	tesoro.destroy();
 	fuego.destroy();
 	hada.destroy();
 
@@ -832,18 +858,18 @@ bool processInput(bool continueApplication) {
 
 	// Controles de personaje principal
 	if (glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS){
-		modelMatrixMainCharacter = glm::rotate(modelMatrixMainCharacter, 0.02f, glm::vec3(0, 1, 0));
+		modelMatrixMainCharacter = glm::rotate(modelMatrixMainCharacter, 0.22f, glm::vec3(0, 1, 0));
 		animationMainCharacterIndex = 0;
 	} else if (glfwGetKey(window, GLFW_KEY_RIGHT) == GLFW_PRESS){
-		modelMatrixMainCharacter = glm::rotate(modelMatrixMainCharacter, -0.02f, glm::vec3(0, 1, 0));
+		modelMatrixMainCharacter = glm::rotate(modelMatrixMainCharacter, -0.22f, glm::vec3(0, 1, 0));
 		animationMainCharacterIndex = 0;
 	}
 	if (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS){
-		modelMatrixMainCharacter = glm::translate(modelMatrixMainCharacter, glm::vec3(0.0, 0.0, 0.02));
+		modelMatrixMainCharacter = glm::translate(modelMatrixMainCharacter, glm::vec3(0.0, 0.0, 1.02));
 		animationMainCharacterIndex = 0;
 	}
 	else if (glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS){
-		modelMatrixMainCharacter = glm::translate(modelMatrixMainCharacter, glm::vec3(0.0, 0.0, -0.02));
+		modelMatrixMainCharacter = glm::translate(modelMatrixMainCharacter, glm::vec3(0.0, 0.0, -1.02));
 		animationMainCharacterIndex = 0;
 	}
 
@@ -863,6 +889,9 @@ void prepareScene(){
 
 	// Antorcha
 	modelAntorcha.setShader(&shaderMulLighting);
+
+	// Tesoro
+	tesoro.setShader(&shaderMulLighting);
 
 	//Mayow
 	modelMainCharacter.setShader(&shaderMulLighting);
@@ -890,6 +919,9 @@ void prepareDepthScene(){
 
 	// Antorcha
 	modelAntorcha.setShader(&shaderDepth);
+
+	// Tesoro
+	tesoro.setShader(&shaderDepth);
 
 	//Mayow
 	modelMainCharacter.setShader(&shaderDepth);
@@ -951,6 +983,21 @@ void renderSolidScene(){
 		fuego.setScale(glm::vec3(0.003,0.003,0.003));
 		fuego.render();
 	}
+	
+	// Renderizar solo los tesoros que no han sido recogidos
+	for (int i = 0; i < tesorosPosition.size(); ++i) {
+		if (!tesorosRecogidos[i]) {
+			tesorosPosition[i].y = terrain.getHeightTerrain(tesorosPosition[i].x, tesorosPosition[i].z);
+			tesoro.setPosition(tesorosPosition[i]);
+			tesoro.setScale(glm::vec3(1.0));
+			tesoro.setOrientation(glm::vec3(0, tesorosOrientation[i], 0));
+			tesoro.render();
+		}
+	}
+
+
+
+
 
 	/*****************************************
 	 * Objetos animados por huesos
@@ -1304,6 +1351,24 @@ void applicationLoop() {
 			std::get<0>(collidersOBB.find("Antorcha-" + std::to_string(i))->second) = lampCollider;
 		}
 
+
+		// Configurar los colliders de los tesoros
+		for (int i = 0; i < tesorosPosition.size(); i++) {
+			// Configurar el collider del tesoro
+			AbstractModel::OBB tesoroCollider;
+			glm::mat4 modelMatrixColliderTesoro = glm::mat4(1.0);
+			modelMatrixColliderTesoro = glm::translate(modelMatrixColliderTesoro, tesorosPosition[i]);
+			modelMatrixColliderTesoro = glm::rotate(modelMatrixColliderTesoro, glm::radians(tesorosOrientation[i]), glm::vec3(0, 1, 0));
+			addOrUpdateColliders(collidersOBB, "Tesoro-" + std::to_string(i), tesoroCollider, modelMatrixColliderTesoro);
+			tesoroCollider.u = glm::quat_cast(modelMatrixColliderTesoro);
+			modelMatrixColliderTesoro = glm::scale(modelMatrixColliderTesoro, glm::vec3(1.0, 1.0, 1.0));
+			modelMatrixColliderTesoro = glm::translate(modelMatrixColliderTesoro, tesoro.getObb().c);
+			tesoroCollider.c = glm::vec3(modelMatrixColliderTesoro[3]);
+			tesoroCollider.e = tesoro.getObb().e * glm::vec3(1.0, 1.0, 1.0);
+			std::get<0>(collidersOBB.find("Tesoro-" + std::to_string(i))->second) = tesoroCollider;
+		}
+
+
 		// Define una estructura para mantener la información de cada collider
 		struct ColliderData {
 			std::string name;
@@ -1492,28 +1557,62 @@ void applicationLoop() {
 			addOrUpdateCollisionDetection(collisionDetection, it->first, isCollision);
 		}
 
-		for (std::map<std::string,
-			std::tuple<AbstractModel::OBB, glm::mat4, glm::mat4>>::iterator it =
-			collidersOBB.begin(); it != collidersOBB.end(); it++) {
-			bool isColision = false;
-			for (std::map<std::string,
-				std::tuple<AbstractModel::OBB, glm::mat4, glm::mat4>>::iterator jt =
-				collidersOBB.begin(); jt != collidersOBB.end(); jt++) {
-				if (it != jt && 
-					testOBBOBB(std::get<0>(it->second), std::get<0>(jt->second))) {
-					// Aqui se va a evaluar si el guardia y/o el fantasma chocaron con el jugador.
-					if ((it->first == "fantasma" && jt->first == "main") || (jt->first == "fantasma" && it->first == "main")) 
-					{
-						std::cout << "El fantasma ha colisionado con el jugador. Cerrando el juego..." << std::endl;
-						return;
+
+
+		for (auto it = collidersOBB.begin(); it != collidersOBB.end(); ++it) {
+			if (it->first.find("Tesoro-") != std::string::npos) {
+				// Verificar si el tesoro ya ha sido recogido
+				auto index = std::stoi(it->first.substr(it->first.find('-') + 1));
+				if (tesorosRecogidos[index]) {
+					continue; // Saltar este tesoro si ya ha sido recogido
+				}
+
+				for (auto jt = collidersOBB.begin(); jt != collidersOBB.end(); ++jt) {
+					if (jt->first == "main" && testOBBOBB(std::get<0>(it->second), std::get<0>(jt->second))) {
+						std::cout << "El jugador ha recogido un tesoro." << std::endl;
+						treasuresCollected++;
+						// Marcar el tesoro como recogido
+						tesorosRecogidos[index] = true;
+						collidersToRemove.push_back(it->first);
+						break; // Evitar múltiples detecciones para el mismo tesoro
 					}
-					//std::cout << "Hay colision entre " << it->first << " y el modelo" <<
-						//jt->first << std::endl;
-					isColision = true;
+				}
+			} else if (it->first == "fantasma") {
+				for (auto jt = collidersOBB.begin(); jt != collidersOBB.end(); ++jt) {
+					if (jt->first == "main" && testOBBOBB(std::get<0>(it->second), std::get<0>(jt->second))) {
+						std::cout << "El fantasma ha colisionado con el jugador. Cerrando el juego..." << std::endl;
+						exit(1); // Terminar el juego al detectar colisión con el fantasma
+					}
 				}
 			}
-			addOrUpdateCollisionDetection(collisionDetection, it->first, isColision);
+		}		
+
+		// Eliminar los colisionadores de los tesoros recogidos
+		for (const auto& collider : collidersToRemove) {
+			collidersOBB.erase(collider);
 		}
+
+		// Eliminar los tesoros recogidos de los vectores de posición y orientación
+		std::sort(indicesToRemove.rbegin(), indicesToRemove.rend());
+		for (const auto& index : indicesToRemove) {
+			if (index >= 0 && index < tesorosPosition.size()) {
+				tesorosPosition.erase(tesorosPosition.begin() + index);
+				tesorosOrientation.erase(tesorosOrientation.begin() + index);
+			}
+		}
+
+		// Actualización de la detección de colisiones
+		for (auto& collider : collidersOBB) {
+			bool isCollision = false;
+			for (auto& otherCollider : collidersOBB) {
+				if (collider.first != otherCollider.first && testOBBOBB(std::get<0>(collider.second), std::get<0>(otherCollider.second))) {
+					isCollision = true;
+					break;
+				}
+			}
+			addOrUpdateCollisionDetection(collisionDetection, collider.first, isCollision);
+		}
+
 
 		for (std::map<std::string,
 			std::tuple<AbstractModel::SBB, glm::mat4, glm::mat4>>::iterator it =
@@ -1577,13 +1676,18 @@ void applicationLoop() {
 		
 		/**********Maquinas de estado*************/
 		
-		
+		//Para saber la posicion del personaje
+		//std::cout << " x " << modelMatrixMainCharacter[3].x << " y " << modelMatrixMainCharacter[3].y << " z " << modelMatrixMainCharacter[3].z << std::endl;
+
+		//Contador de tesoros
+		std::cout << " Tesoros Counter: " << treasuresCollected << std::endl;
 
 		// Constantes de animaciones
 		animationMainCharacterIndex = 1;
 
 		glfwSwapBuffers(window);
 
+		
 		/****************************+
 		 * Open AL sound data
 		 */
