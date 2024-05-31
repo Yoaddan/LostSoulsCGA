@@ -88,15 +88,12 @@ Box boxViewDepth;
 Model laberinto; //Laberinto principal.
 Model fantasma; //Enemigo que atraviesa paredes.
 Model guardia; //Enemigo con ruta predefinida.
-
-// Lamps
-Model modelAntorcha;
-Model modelLamp2;
-Model modelLampPost2;
+Model modelAntorcha; //Antorchas.
+Model fuego; //Fuego animado.
+Model hada; //Hada.
 
 // Personaje principal
-// Mayow
-Model mayowModelAnimate;
+Model modelMainCharacter;
 
 // Terrain model instance
 Terrain terrain(-1, -1, 200, 5, "../Textures/Height Map/heightmap.png");
@@ -139,14 +136,13 @@ int lastMousePosY, offsetY = 0;
 glm::mat4 modelMatrixLaberinto = glm::mat4(1.0f);
 glm::mat4 modelMatrixFantasma = glm::mat4(1.0f);
 glm::mat4 modelMatrixGuardia = glm::mat4(1.0f);
+glm::mat4 modelMatrixHada = glm::mat4(1.0f);
 
-glm::mat4 modelMatrixMayow = glm::mat4(1.0f);
+glm::mat4 modelMatrixMainCharacter = glm::mat4(1.0f);
 
-int animationMayowIndex = 1;
-int modelSelected = 0;
-bool enableCountSelected = true;
+int animationMainCharacterIndex = 1;
 
-// Lamps position
+// Posicion antorchas
 std::vector<glm::vec3> torchesPosition = {
 	glm::vec3(-1.79279, 0, 2.06897),
 	glm::vec3(-2.1736, 0, 36.6826),
@@ -155,8 +151,9 @@ std::vector<glm::vec3> torchesPosition = {
 	glm::vec3(-31.1512, 0, -12.7198),
 	glm::vec3(-37.0462, 0, 16.0555)
 };
+// Orientación antorchas.
 std::vector<float> torchesOrientation = {
-	0.0, 0.0, 0.0, 0.0, 0.0, 0.0
+	0.0, 90.0, 180.0, 270.0, 0.0, 90.0
 };
 
 double deltaTime;
@@ -176,14 +173,14 @@ std::map<std::string, std::tuple<AbstractModel::SBB, glm::mat4, glm::mat4> > col
 ALfloat listenerPos[] = { 0.0, 0.0, 4.0 };
 ALfloat listenerVel[] = { 0.0, 0.0, 0.0 };
 ALfloat listenerOri[] = { 0.0, 0.0, 1.0, 0.0, 1.0, 0.0 };
-// Source 0
-ALfloat source0Pos[] = { -2.0, 0.0, 0.0 };
+// Source 0 
+ALfloat source0Pos[] = { 0.0, 0.0, 0.0 };
 ALfloat source0Vel[] = { 0.0, 0.0, 0.0 };
 // Source 1
-ALfloat source1Pos[] = { 2.0, 0.0, 0.0 };
+ALfloat source1Pos[] = { 0.0, 0.0, 0.0 };
 ALfloat source1Vel[] = { 0.0, 0.0, 0.0 };
 // Source 2
-ALfloat source2Pos[] = { 2.0, 0.0, 0.0 };
+ALfloat source2Pos[] = { 0.0, 0.0, 0.0 };
 ALfloat source2Vel[] = { 0.0, 0.0, 0.0 };
 // Buffers
 ALuint buffer[NUM_BUFFERS];
@@ -313,10 +310,18 @@ void init(int width, int height, std::string strTitle, bool bFullScreen) {
 	// Antorcha
 	modelAntorcha.loadModel("../models/Antorcha/Antorcha.obj");
 	modelAntorcha.setShader(&shaderMulLighting);
+
+	// Fuego
+	fuego.loadModel("../models/Fuego/Fuego.fbx");
+	fuego.setShader(&shaderMulLighting);
+
+	// Hada
+	hada.loadModel("../models/Hada/Hada.obj");
+	hada.setShader(&shaderMulLighting);
 	
-	// Mayow
-	mayowModelAnimate.loadModel("../models/mayow/personaje2.fbx");
-	mayowModelAnimate.setShader(&shaderMulLighting);
+	// Personaje principal
+	modelMainCharacter.loadModel("../models/PersonajePrincipal/PersonajePrincipal.obj");
+	modelMainCharacter.setShader(&shaderMulLighting);
 
 	// Terreno
 	terrain.init();
@@ -576,7 +581,7 @@ void init(int width, int height, std::string strTitle, bool bFullScreen) {
 	}
 	// Generate buffers, or else no sound will happen!
 	alGenBuffers(NUM_BUFFERS, buffer);
-	buffer[0] = alutCreateBufferFromFile("../sounds/fountain.wav");
+	buffer[0] = alutCreateBufferFromFile("../sounds/fantasma.wav");
 	buffer[1] = alutCreateBufferFromFile("../sounds/fire.wav");
 	buffer[2] = alutCreateBufferFromFile("../sounds/darth_vader.wav");
 	int errorAlut = alutGetError();
@@ -596,12 +601,12 @@ void init(int width, int height, std::string strTitle, bool bFullScreen) {
 		printf("init - no errors after alGenSources\n");
 	}
 	alSourcef(source[0], AL_PITCH, 1.0f);
-	alSourcef(source[0], AL_GAIN, 3.0f);
+	alSourcef(source[0], AL_GAIN, 0.3f);
 	alSourcefv(source[0], AL_POSITION, source0Pos);
 	alSourcefv(source[0], AL_VELOCITY, source0Vel);
 	alSourcei(source[0], AL_BUFFER, buffer[0]);
 	alSourcei(source[0], AL_LOOPING, AL_TRUE);
-	alSourcef(source[0], AL_MAX_DISTANCE, 2000);
+    alSourcef(source[0], AL_MAX_DISTANCE, 0.00000000000000000000000000001f);       // Distancia máxima en la que el sonido se escucha
 
 	alSourcef(source[1], AL_PITCH, 1.0f);
 	alSourcef(source[1], AL_GAIN, 0.5f);
@@ -665,9 +670,11 @@ void destroy() {
 	laberinto.destroy();
 	fantasma.destroy();
 	guardia.destroy();
-
 	modelAntorcha.destroy();
-	mayowModelAnimate.destroy();
+	fuego.destroy();
+	hada.destroy();
+
+	modelMainCharacter.destroy();
 
 	// Terrains objects Delete
 	terrain.destroy();
@@ -795,11 +802,11 @@ bool processInput(bool continueApplication) {
 		std::cout << "Right Trigger/R2: " << axes[4] << std::endl;
 
 		if(fabs(axes[1]) > 0.2){
-			modelMatrixMayow = glm::translate(modelMatrixMayow, glm::vec3(0, 0, -axes[1] * 0.1));
-			animationMayowIndex = 0;
+			modelMatrixMainCharacter = glm::translate(modelMatrixMainCharacter, glm::vec3(0, 0, -axes[1] * 0.1));
+			animationMainCharacterIndex = 0;
 		}if(fabs(axes[0]) > 0.2){
-			modelMatrixMayow = glm::rotate(modelMatrixMayow, glm::radians(-axes[0] * 1.5f), glm::vec3(0, 1, 0));
-			animationMayowIndex = 0;
+			modelMatrixMainCharacter = glm::rotate(modelMatrixMainCharacter, glm::radians(-axes[0] * 1.5f), glm::vec3(0, 1, 0));
+			animationMainCharacterIndex = 0;
 		}
 
 		if(fabs(axes[2]) > 0.2){
@@ -811,7 +818,7 @@ bool processInput(bool continueApplication) {
 		const unsigned char * buttons = glfwGetJoystickButtons(GLFW_JOYSTICK_1, &buttonCount);
 		std::cout << "Número de botones disponibles :=>" << buttonCount << std::endl;
 		if(buttons[0] == GLFW_PRESS)
-			std::cout << "Se presiona x" << std::endl;
+			std::cout << "Se presiona cuadrado" << std::endl;
 
 	}
 
@@ -823,21 +830,21 @@ bool processInput(bool continueApplication) {
 	offsetX = 0;
 	offsetY = 0;
 
-	// Controles de mayow
+	// Controles de personaje principal
 	if (glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS){
-		modelMatrixMayow = glm::rotate(modelMatrixMayow, 0.02f, glm::vec3(0, 1, 0));
-		animationMayowIndex = 0;
+		modelMatrixMainCharacter = glm::rotate(modelMatrixMainCharacter, 0.02f, glm::vec3(0, 1, 0));
+		animationMainCharacterIndex = 0;
 	} else if (glfwGetKey(window, GLFW_KEY_RIGHT) == GLFW_PRESS){
-		modelMatrixMayow = glm::rotate(modelMatrixMayow, -0.02f, glm::vec3(0, 1, 0));
-		animationMayowIndex = 0;
+		modelMatrixMainCharacter = glm::rotate(modelMatrixMainCharacter, -0.02f, glm::vec3(0, 1, 0));
+		animationMainCharacterIndex = 0;
 	}
 	if (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS){
-		modelMatrixMayow = glm::translate(modelMatrixMayow, glm::vec3(0.0, 0.0, 0.02));
-		animationMayowIndex = 0;
+		modelMatrixMainCharacter = glm::translate(modelMatrixMainCharacter, glm::vec3(0.0, 0.0, 0.02));
+		animationMainCharacterIndex = 0;
 	}
 	else if (glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS){
-		modelMatrixMayow = glm::translate(modelMatrixMayow, glm::vec3(0.0, 0.0, -0.02));
-		animationMayowIndex = 0;
+		modelMatrixMainCharacter = glm::translate(modelMatrixMainCharacter, glm::vec3(0.0, 0.0, -0.02));
+		animationMainCharacterIndex = 0;
 	}
 
 	glfwPollEvents();
@@ -848,11 +855,17 @@ void prepareScene(){
 
 	terrain.setShader(&shaderTerrain);
 
+	// Fuego
+	fuego.setShader(&shaderMulLighting);
+
+	// Hada
+	hada.setShader(&shaderMulLighting);
+
 	// Antorcha
 	modelAntorcha.setShader(&shaderMulLighting);
 
 	//Mayow
-	mayowModelAnimate.setShader(&shaderMulLighting);
+	modelMainCharacter.setShader(&shaderMulLighting);
 
 	// Laberinto
 	laberinto.setShader(&shaderMulLighting);
@@ -869,11 +882,17 @@ void prepareDepthScene(){
 
 	terrain.setShader(&shaderDepth);
 
+	// Fuego
+	fuego.setShader(&shaderDepth);
+
+	// Hada
+	hada.setShader(&shaderDepth);
+
 	// Antorcha
 	modelAntorcha.setShader(&shaderDepth);
 
 	//Mayow
-	mayowModelAnimate.setShader(&shaderDepth);
+	modelMainCharacter.setShader(&shaderDepth);
 
 	// Laberinto
 	laberinto.setShader(&shaderDepth);
@@ -919,30 +938,39 @@ void renderSolidScene(){
 	// Forze to enable the unit texture to 0 always ----------------- IMPORTANT
 	glActiveTexture(GL_TEXTURE0);
 
-	// Render torch
+	// Render antorchas con fuego
 	for(int i = 0; i < torchesPosition.size(); i++){
 		torchesPosition[i].y = terrain.getHeightTerrain(torchesPosition[i].x, torchesPosition[i].z);
 		modelAntorcha.setPosition(torchesPosition[i]);
 		modelAntorcha.setScale(glm::vec3(1.0));
 		modelAntorcha.setOrientation(glm::vec3(0, torchesOrientation[i], 0));
 		modelAntorcha.render();
+		glm::vec3 fuegoPosition = torchesPosition[i];
+		fuegoPosition.y = torchesPosition[i].y + 1.05;
+		fuego.setPosition(fuegoPosition);
+		fuego.setScale(glm::vec3(0.003,0.003,0.003));
+		fuego.render();
 	}
 
 	/*****************************************
 	 * Objetos animados por huesos
 	 * **************************************/
-	glm::vec3 ejey = glm::normalize(terrain.getNormalTerrain(modelMatrixMayow[3][0], modelMatrixMayow[3][2]));
-	glm::vec3 ejex = glm::vec3(modelMatrixMayow[0]);
+	glm::vec3 ejey = glm::normalize(terrain.getNormalTerrain(modelMatrixMainCharacter[3][0], modelMatrixMainCharacter[3][2]));
+	glm::vec3 ejex = glm::vec3(modelMatrixMainCharacter[0]);
 	glm::vec3 ejez = glm::normalize(glm::cross(ejex, ejey));
 	ejex = glm::normalize(glm::cross(ejey, ejez));
-	modelMatrixMayow[0] = glm::vec4(ejex, 0.0);
-	modelMatrixMayow[1] = glm::vec4(ejey, 0.0);
-	modelMatrixMayow[2] = glm::vec4(ejez, 0.0);
-	modelMatrixMayow[3][1] = terrain.getHeightTerrain(modelMatrixMayow[3][0], modelMatrixMayow[3][2]);
-	glm::mat4 modelMatrixMayowBody = glm::mat4(modelMatrixMayow);
-	modelMatrixMayowBody = glm::scale(modelMatrixMayowBody, glm::vec3(0.021f));
-	mayowModelAnimate.setAnimationIndex(animationMayowIndex);
-	mayowModelAnimate.render(modelMatrixMayowBody);
+	modelMatrixMainCharacter[0] = glm::vec4(ejex, 0.0);
+	modelMatrixMainCharacter[1] = glm::vec4(ejey, 0.0);
+	modelMatrixMainCharacter[2] = glm::vec4(ejez, 0.0);
+	modelMatrixMainCharacter[3][1] = terrain.getHeightTerrain(modelMatrixMainCharacter[3][0], modelMatrixMainCharacter[3][2]);
+	glm::mat4 modelMatrixMainCharacterBody = glm::mat4(modelMatrixMainCharacter);
+	//modelMatrixMainCharacterBody = glm::scale(modelMatrixMainCharacterBody, glm::vec3(0.021f)); //Se debe comentar despues
+	modelMainCharacter.setAnimationIndex(animationMainCharacterIndex);
+	modelMainCharacter.render(modelMatrixMainCharacterBody);
+
+	modelMatrixHada = modelMatrixMainCharacter;
+	modelMatrixHada = glm::translate(modelMatrixHada, glm::vec3(0.174625f,1.552f, -0.5f));
+	hada.render(modelMatrixHada);
 
 	modelMatrixGuardia[3][1] = terrain.getHeightTerrain(modelMatrixGuardia[3][0], modelMatrixGuardia[3][2]);
 	glm::mat4 modelMatrixGuardiaBody = glm::mat4(modelMatrixGuardia);
@@ -950,10 +978,10 @@ void renderSolidScene(){
 
 	// Interpolación lineal para mover el fantasma hacia la posición de Mayow
 	float interpolationFactor = 0.001f; // Ajusta este valor para cambiar la velocidad de seguimiento
-	glm::vec3 newPositionFantasma = glm::mix(glm::vec3(modelMatrixFantasma[3]), glm::vec3(modelMatrixMayow[3]), interpolationFactor);
+	glm::vec3 newPositionFantasma = glm::mix(glm::vec3(modelMatrixFantasma[3]), glm::vec3(modelMatrixMainCharacter[3]), interpolationFactor);
 
 	// Calcular la dirección hacia Mayow y ajustar la orientación del fantasma
-	glm::vec3 directionFantasma = glm::normalize(glm::vec3(modelMatrixMayow[3]) - newPositionFantasma);
+	glm::vec3 directionFantasma = glm::normalize(glm::vec3(modelMatrixMainCharacter[3]) - newPositionFantasma);
 	glm::vec3 upFantasma = glm::vec3(0.0f, 1.0f, 0.0f);
 	glm::vec3 rightFantasma = glm::normalize(glm::cross(upFantasma, directionFantasma));
 	upFantasma = glm::cross(directionFantasma, rightFantasma);
@@ -1027,7 +1055,7 @@ void renderAlphaScene(bool render = true){
 
 void renderScene(){
 	renderSolidScene();
-	//renderAlphaScene(false);
+	renderAlphaScene(false);
 }
 
 void applicationLoop() {
@@ -1037,14 +1065,9 @@ void applicationLoop() {
 	glm::vec3 target;
 	float angleTarget;
 
-	int state = 0;
-	float advanceCount = 0.0;
-	float rotCount = 0.0;
-	int numberAdvance = 0;
-	int maxAdvance = 0.0;
-
-	modelMatrixMayow = glm::translate(modelMatrixMayow, glm::vec3(34.677f, 0.05f, 37.0987f));
-	modelMatrixMayow = glm::rotate(modelMatrixMayow, glm::radians(-90.0f), glm::vec3(0, 1, 0));
+	// Posiciones y estados iniciales.
+	modelMatrixMainCharacter = glm::translate(modelMatrixMainCharacter, glm::vec3(34.677f, 0.05f, 37.0987f));
+	modelMatrixMainCharacter = glm::rotate(modelMatrixMainCharacter, glm::radians(-90.0f), glm::vec3(0, 1, 0));
 
 	lastTime = TimeManager::Instance().GetTime();
 
@@ -1073,9 +1096,9 @@ void applicationLoop() {
 				(float) screenWidth / (float) screenHeight, 0.01f, 100.0f);
 
 		
-		axis = glm::axis(glm::quat_cast(modelMatrixMayow));
-		angleTarget = glm::angle(glm::quat_cast(modelMatrixMayow));
-		target = modelMatrixMayow[3];
+		axis = glm::axis(glm::quat_cast(modelMatrixMainCharacter));
+		angleTarget = glm::angle(glm::quat_cast(modelMatrixMainCharacter));
+		target = modelMatrixMainCharacter[3];
 		
 		if(std::isnan(angleTarget))
 			angleTarget = 0.0;
@@ -1149,8 +1172,8 @@ void applicationLoop() {
 		/*******************************************
 		 * Propiedades PointLights
 		 *******************************************/
-		shaderMulLighting.setInt("pointLightCount", torchesPosition.size());
-		shaderTerrain.setInt("pointLightCount", torchesPosition.size());
+		shaderMulLighting.setInt("pointLightCount", torchesPosition.size()+1);
+		shaderTerrain.setInt("pointLightCount", torchesPosition.size()+1);
 		for(int i = 0; i < torchesPosition.size(); i++){
 			glm::mat4 matrixAdjustTorch = glm::mat4(1.0);
 			matrixAdjustTorch = glm::translate(matrixAdjustTorch, torchesPosition[i]);
@@ -1158,14 +1181,14 @@ void applicationLoop() {
 			matrixAdjustTorch = glm::scale(matrixAdjustTorch, glm::vec3(1.0));
 			matrixAdjustTorch = glm::translate(matrixAdjustTorch, glm::vec3(0.0, 0.929738, 0));
 			glm::vec3 torchPosition = glm::vec3(matrixAdjustTorch[3]);
-			shaderMulLighting.setVectorFloat3("pointLights[" + std::to_string(i) + "].light.ambient", glm::value_ptr(glm::vec3(0.4, 0.32, 0.02)));
+			shaderMulLighting.setVectorFloat3("pointLights[" + std::to_string(i) + "].light.ambient", glm::value_ptr(glm::vec3(0.2, 0.16, 0.01)));
 			shaderMulLighting.setVectorFloat3("pointLights[" + std::to_string(i) + "].light.diffuse", glm::value_ptr(glm::vec3(0.4, 0.32, 0.02)));
 			shaderMulLighting.setVectorFloat3("pointLights[" + std::to_string(i) + "].light.specular", glm::value_ptr(glm::vec3(0.6, 0.58, 0.03)));
 			shaderMulLighting.setVectorFloat3("pointLights[" + std::to_string(i) + "].position", glm::value_ptr(torchPosition));
 			shaderMulLighting.setFloat("pointLights[" + std::to_string(i) + "].constant", 1.0);
 			shaderMulLighting.setFloat("pointLights[" + std::to_string(i) + "].linear", 0.09);
 			shaderMulLighting.setFloat("pointLights[" + std::to_string(i) + "].quadratic", 0.02);
-			shaderTerrain.setVectorFloat3("pointLights[" + std::to_string(i) + "].light.ambient", glm::value_ptr(glm::vec3(0.4, 0.32, 0.02)));
+			shaderTerrain.setVectorFloat3("pointLights[" + std::to_string(i) + "].light.ambient", glm::value_ptr(glm::vec3(0.2, 0.16, 0.01)));
 			shaderTerrain.setVectorFloat3("pointLights[" + std::to_string(i) + "].light.diffuse", glm::value_ptr(glm::vec3(0.4, 0.32, 0.02)));
 			shaderTerrain.setVectorFloat3("pointLights[" + std::to_string(i) + "].light.specular", glm::value_ptr(glm::vec3(0.6, 0.58, 0.03)));
 			shaderTerrain.setVectorFloat3("pointLights[" + std::to_string(i) + "].position", glm::value_ptr(torchPosition));
@@ -1173,6 +1196,25 @@ void applicationLoop() {
 			shaderTerrain.setFloat("pointLights[" + std::to_string(i) + "].linear", 0.09);
 			shaderTerrain.setFloat("pointLights[" + std::to_string(i) + "].quadratic", 0.02);
 		}
+
+		// Pointlight del hada
+		glm::mat4 matrixAdjustFairy = glm::mat4(1.0);
+		matrixAdjustFairy = glm::translate(matrixAdjustFairy, glm::vec3(modelMatrixHada[3]));
+		glm::vec3 FairyPosition = glm::vec3(matrixAdjustFairy[3]);
+		shaderMulLighting.setVectorFloat3("pointLights[" + std::to_string(torchesPosition.size()) + "].light.ambient", glm::value_ptr(glm::vec3(0.1, 0.1, 0.1)));
+		shaderMulLighting.setVectorFloat3("pointLights[" + std::to_string(torchesPosition.size()) + "].light.diffuse", glm::value_ptr(glm::vec3(0.1, 0.1, 0.1)));
+		shaderMulLighting.setVectorFloat3("pointLights[" + std::to_string(torchesPosition.size()) + "].light.specular", glm::value_ptr(glm::vec3(0.1, 0.1, 0.1)));
+		shaderMulLighting.setVectorFloat3("pointLights[" + std::to_string(torchesPosition.size()) + "].position", glm::value_ptr(FairyPosition));
+		shaderMulLighting.setFloat("pointLights[" + std::to_string(torchesPosition.size()) + "].constant", 1.0);
+		shaderMulLighting.setFloat("pointLights[" + std::to_string(torchesPosition.size()) + "].linear", 0.09);
+		shaderMulLighting.setFloat("pointLights[" + std::to_string(torchesPosition.size()) + "].quadratic", 0.02);
+		shaderTerrain.setVectorFloat3("pointLights[" + std::to_string(torchesPosition.size()) + "].light.ambient", glm::value_ptr(glm::vec3(0.1, 0.1, 0.1)));
+		shaderTerrain.setVectorFloat3("pointLights[" + std::to_string(torchesPosition.size()) + "].light.diffuse", glm::value_ptr(glm::vec3(0.1, 0.1, 0.1)));
+		shaderTerrain.setVectorFloat3("pointLights[" + std::to_string(torchesPosition.size()) + "].light.specular", glm::value_ptr(glm::vec3(0.1, 0.1, 0.1)));
+		shaderTerrain.setVectorFloat3("pointLights[" + std::to_string(torchesPosition.size()) + "].position", glm::value_ptr(FairyPosition));
+		shaderTerrain.setFloat("pointLights[" + std::to_string(torchesPosition.size()) + "].constant", 1.0);
+		shaderTerrain.setFloat("pointLights[" + std::to_string(torchesPosition.size()) + "].linear", 0.09);
+		shaderTerrain.setFloat("pointLights[" + std::to_string(torchesPosition.size()) + "].quadratic", 0.02);
 
 		// Para sombras
 		shaderTerrain.setMatrix4("lightSpaceMatrix", 1, false, glm::value_ptr(lightSpaceMatrix));
@@ -1378,21 +1420,19 @@ void applicationLoop() {
 		}
 
 
-		// Collider de mayow
-		AbstractModel::OBB mayowCollider;
-		glm::mat4 modelmatrixColliderMayow = glm::mat4(modelMatrixMayow);
-		modelmatrixColliderMayow = glm::rotate(modelmatrixColliderMayow,
-				glm::radians(-90.0f), glm::vec3(1, 0, 0));
+		// Collider de personaje principal
+		AbstractModel::OBB mainCharacterCollider;
+		glm::mat4 modelmatrixColliderMainCharacter = glm::mat4(modelMatrixMainCharacter);
 		// Set the orientation of collider before doing the scale
-		mayowCollider.u = glm::quat_cast(modelmatrixColliderMayow);
-		modelmatrixColliderMayow = glm::scale(modelmatrixColliderMayow, glm::vec3(0.021, 0.021, 0.021));
-		modelmatrixColliderMayow = glm::translate(modelmatrixColliderMayow,
-				glm::vec3(mayowModelAnimate.getObb().c.x,
-						mayowModelAnimate.getObb().c.y,
-						mayowModelAnimate.getObb().c.z));
-		mayowCollider.e = mayowModelAnimate.getObb().e * glm::vec3(0.021, 0.021, 0.021) * glm::vec3(0.787401574, 0.787401574, 0.787401574);
-		mayowCollider.c = glm::vec3(modelmatrixColliderMayow[3]);
-		addOrUpdateColliders(collidersOBB, "mayow", mayowCollider, modelMatrixMayow);
+		mainCharacterCollider.u = glm::quat_cast(modelmatrixColliderMainCharacter);
+		modelmatrixColliderMainCharacter = glm::scale(modelmatrixColliderMainCharacter, glm::vec3(1.0, 1.0, 1.0));
+		modelmatrixColliderMainCharacter = glm::translate(modelmatrixColliderMainCharacter,
+				glm::vec3(modelMainCharacter.getObb().c.x,
+						modelMainCharacter.getObb().c.y,
+						modelMainCharacter.getObb().c.z));
+		mainCharacterCollider.e = modelMainCharacter.getObb().e * glm::vec3(1.0, 1.0, 1.01) * glm::vec3(0.787401574, 0.787401574, 0.787401574);
+		mainCharacterCollider.c = glm::vec3(modelmatrixColliderMainCharacter[3]);
+		addOrUpdateColliders(collidersOBB, "main", mainCharacterCollider, modelMatrixMainCharacter);
 
 		// Collider de fantasma
 		AbstractModel::OBB fantasmaCollider;
@@ -1431,9 +1471,9 @@ void applicationLoop() {
 			sphereCollider.setColor(glm::vec4(1.0, 1.0, 1.0, 1.0));
 			sphereCollider.enableWireMode();
 			sphereCollider.render(matrixCollider);
-		}
+		}*/
 
-		*/
+		
 		/*********************Prueba de colisiones****************************/
 		for (std::map<std::string,
 			std::tuple<AbstractModel::SBB, glm::mat4, glm::mat4>>::iterator it =
@@ -1462,9 +1502,9 @@ void applicationLoop() {
 				if (it != jt && 
 					testOBBOBB(std::get<0>(it->second), std::get<0>(jt->second))) {
 					// Aqui se va a evaluar si el guardia y/o el fantasma chocaron con el jugador.
-					if ((it->first == "fantasma" && jt->first == "mayow") || (jt->first == "fantasma" && it->first == "mayow")) 
+					if ((it->first == "fantasma" && jt->first == "main") || (jt->first == "fantasma" && it->first == "main")) 
 					{
-						std::cout << "El fantasma ha colisionado con mayow. Cerrando el juego..." << std::endl;
+						std::cout << "El fantasma ha colisionado con el jugador. Cerrando el juego..." << std::endl;
 						return;
 					}
 					//std::cout << "Hay colision entre " << it->first << " y el modelo" <<
@@ -1509,44 +1549,11 @@ void applicationLoop() {
 				if (!itCollision->second) 
 					addOrUpdateColliders(collidersOBB, itCollision->first);
 				else {
-					if (itCollision->first.compare("mayow") == 0)
-						modelMatrixMayow = std::get<1>(obbBuscado->second);
+					if (itCollision->first.compare("main") == 0)
+						modelMatrixMainCharacter = std::get<1>(obbBuscado->second);
 				}
 			}
 		}
-
-		glm::mat4 modelMatrixRayMay = glm::mat4(modelMatrixMayow);
-		modelMatrixRayMay = glm::translate(modelMatrixRayMay, glm::vec3(0, 1, 0));
-		float maxDistanceRay = 10.0;
-		glm::vec3 rayDirection = modelMatrixRayMay[2];
-		glm::vec3 ori = modelMatrixRayMay[3];
-		glm::vec3 rmd = ori + rayDirection * (maxDistanceRay / 2.0f);
-		glm::vec3 targetRay = ori + rayDirection * maxDistanceRay;
-		modelMatrixRayMay[3] = glm::vec4(rmd, 1.0);
-		modelMatrixRayMay = glm::rotate(modelMatrixRayMay, glm::radians(90.0f), 
-			glm::vec3(1, 0, 0));
-		modelMatrixRayMay = glm::scale(modelMatrixRayMay, 
-			glm::vec3(0.05, maxDistanceRay, 0.05));
-		rayModel.render(modelMatrixRayMay);
-
-		std::map<std::string, std::tuple<AbstractModel::SBB, glm::mat4, glm::mat4>>::
-			iterator itSBB;
-		for (itSBB = collidersSBB.begin(); itSBB != collidersSBB.end(); itSBB++) {
-			float tRint;
-			if (raySphereIntersect(ori, targetRay, rayDirection,
-				std::get<0>(itSBB->second), tRint)) {
-				std::cout << "Collision del rayo con el modelo " << itSBB->first 
-				<< std::endl;
-			}
-		}
-		/*std::map<std::string, std::tuple<AbstractModel::OBB, glm::mat4, glm::mat4>>::
-			iterator itOBB;
-		for (itOBB = collidersOBB.begin(); itOBB != collidersOBB.end(); itOBB++) {
-			if (testRayOBB(ori, targetRay, std::get<0>(itOBB->second))) {
-				std::cout << "Collision del rayo con el modelo " << itOBB->first
-					<< std::endl;
-			}
-		}*/
 
 		// Esto es para ilustrar la transformacion inversa de los coliders
 		/*glm::vec3 cinv = glm::inverse(mayowCollider.u) * glm::vec4(rockCollider.c, 1.0);
@@ -1573,18 +1580,19 @@ void applicationLoop() {
 		
 
 		// Constantes de animaciones
-		animationMayowIndex = 1;
+		animationMainCharacterIndex = 1;
 
 		glfwSwapBuffers(window);
 
 		/****************************+
 		 * Open AL sound data
 		 */
-		/*source0Pos[0] = modelMatrixFountain[3].x;
-		source0Pos[1] = modelMatrixFountain[3].y;
-		source0Pos[2] = modelMatrixFountain[3].z;
+		source0Pos[0] = modelMatrixFantasma[3].x;
+		source0Pos[1] = modelMatrixFantasma[3].y;
+		source0Pos[2] = modelMatrixFantasma[3].z;
 		alSourcefv(source[0], AL_POSITION, source0Pos);
 
+		/*
 		source1Pos[0] = modelMatrixGuardian[3].x;
 		source1Pos[1] = modelMatrixGuardian[3].y;
 		source1Pos[2] = modelMatrixGuardian[3].z;
@@ -1596,13 +1604,13 @@ void applicationLoop() {
 		alSourcefv(source[2], AL_POSITION, source2Pos);*/
 
 		// Listener for the Thris person camera
-		listenerPos[0] = modelMatrixMayow[3].x;
-		listenerPos[1] = modelMatrixMayow[3].y;
-		listenerPos[2] = modelMatrixMayow[3].z;
+		listenerPos[0] = modelMatrixMainCharacter[3].x;
+		listenerPos[1] = modelMatrixMainCharacter[3].y;
+		listenerPos[2] = modelMatrixMainCharacter[3].z;
 		alListenerfv(AL_POSITION, listenerPos);
 
-		glm::vec3 upModel = glm::normalize(modelMatrixMayow[1]);
-		glm::vec3 frontModel = glm::normalize(modelMatrixMayow[2]);
+		glm::vec3 upModel = glm::normalize(modelMatrixMainCharacter[1]);
+		glm::vec3 frontModel = glm::normalize(modelMatrixMainCharacter[2]);
 
 		listenerOri[0] = frontModel.x;
 		listenerOri[1] = frontModel.y;
