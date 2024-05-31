@@ -107,6 +107,9 @@ ShadowBox * shadowBox;
 GLuint textureTerrainRID, textureTerrainGID, textureTerrainBID, textureTerrainBlendMapID;
 GLuint skyboxTextureID;
 GLuint textureInit1ID, textureInit2ID, textureActivaID, textureScreenID;
+GLuint textureCounter0ID, textureCounter1ID, textureCounter2ID, textureCounter3ID;
+
+int treasuresCollected = 0;
 
 bool iniciaPartida = false, presionarOpcion = false;
 
@@ -465,7 +468,7 @@ void init(int width, int height, std::string strTitle, bool bFullScreen) {
 	textureIntro2.freeImage(); // Liberamos memoria
 
 	// Definiendo la textura
-	Texture textureScreen("../Textures/Screen.png");
+	Texture textureScreen("../Textures/Counter0.png");
 	textureScreen.loadImage(); // Cargar la textura
 	glGenTextures(1, &textureScreenID); // Creando el id de la textura del landingpad
 	glBindTexture(GL_TEXTURE_2D, textureScreenID); // Se enlaza la textura
@@ -482,6 +485,79 @@ void init(int width, int height, std::string strTitle, bool bFullScreen) {
 	else 
 		std::cout << "Fallo la carga de textura" << std::endl;
 	textureScreen.freeImage(); // Liberamos memoria
+
+	// Definiendo las texturas de la GUI
+	Texture textureCounter0("../Textures/Counter0.png");
+	textureCounter0.loadImage(); // Cargar la textura
+	glGenTextures(1, &textureCounter0ID); // Creando el id de la textura del landingpad
+	glBindTexture(GL_TEXTURE_2D, textureCounter0ID); // Se enlaza la textura
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT); // Wrapping en el eje u
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT); // Wrapping en el eje v
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR); // Filtering de minimización
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR); // Filtering de maximimizacion
+	if(textureCounter0.getData()){
+		// Transferir los datos de la imagen a la tarjeta
+		glTexImage2D(GL_TEXTURE_2D, 0, textureCounter0.getChannels() == 3 ? GL_RGB : GL_RGBA, textureCounter0.getWidth(), textureIntro2.getHeight(), 0,
+		textureCounter0.getChannels() == 3 ? GL_RGB : GL_RGBA, GL_UNSIGNED_BYTE, textureCounter0.getData());
+		glGenerateMipmap(GL_TEXTURE_2D);
+	}
+	else 
+		std::cout << "Fallo la carga de textura" << std::endl;
+	textureCounter0.freeImage(); // Liberamos memoria
+
+	Texture textureCounter1("../Textures/Counter1.png");
+	textureCounter1.loadImage(); // Cargar la textura
+	glGenTextures(1, &textureCounter1ID); // Creando el id de la textura del landingpad
+	glBindTexture(GL_TEXTURE_2D, textureCounter1ID); // Se enlaza la textura
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT); // Wrapping en el eje u
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT); // Wrapping en el eje v
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR); // Filtering de minimización
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR); // Filtering de maximimizacion
+	if(textureCounter1.getData()){
+		// Transferir los datos de la imagen a la tarjeta
+		glTexImage2D(GL_TEXTURE_2D, 0, textureCounter1.getChannels() == 3 ? GL_RGB : GL_RGBA, textureCounter1.getWidth(), textureIntro2.getHeight(), 0,
+		textureCounter1.getChannels() == 3 ? GL_RGB : GL_RGBA, GL_UNSIGNED_BYTE, textureCounter1.getData());
+		glGenerateMipmap(GL_TEXTURE_2D);
+	}
+	else 
+		std::cout << "Fallo la carga de textura" << std::endl;
+	textureCounter1.freeImage(); // Liberamos memoria
+
+	Texture textureCounter2("../Textures/Counter2.png");
+	textureCounter2.loadImage(); // Cargar la textura
+	glGenTextures(1, &textureCounter2ID); // Creando el id de la textura del landingpad
+	glBindTexture(GL_TEXTURE_2D, textureCounter2ID); // Se enlaza la textura
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT); // Wrapping en el eje u
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT); // Wrapping en el eje v
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR); // Filtering de minimización
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR); // Filtering de maximimizacion
+	if(textureCounter2.getData()){
+		// Transferir los datos de la imagen a la tarjeta
+		glTexImage2D(GL_TEXTURE_2D, 0, textureCounter2.getChannels() == 3 ? GL_RGB : GL_RGBA, textureCounter2.getWidth(), textureIntro2.getHeight(), 0,
+		textureCounter2.getChannels() == 3 ? GL_RGB : GL_RGBA, GL_UNSIGNED_BYTE, textureCounter2.getData());
+		glGenerateMipmap(GL_TEXTURE_2D);
+	}
+	else 
+		std::cout << "Fallo la carga de textura" << std::endl;
+	textureCounter2.freeImage(); // Liberamos memoria
+
+	Texture textureCounter3("../Textures/Counter3.png");
+	textureCounter3.loadImage(); // Cargar la textura
+	glGenTextures(1, &textureCounter3ID); // Creando el id de la textura del landingpad
+	glBindTexture(GL_TEXTURE_2D, textureCounter3ID); // Se enlaza la textura
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT); // Wrapping en el eje u
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT); // Wrapping en el eje v
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR); // Filtering de minimización
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR); // Filtering de maximimizacion
+	if(textureCounter3.getData()){
+		// Transferir los datos de la imagen a la tarjeta
+		glTexImage2D(GL_TEXTURE_2D, 0, textureCounter3.getChannels() == 3 ? GL_RGB : GL_RGBA, textureCounter3.getWidth(), textureIntro2.getHeight(), 0,
+		textureCounter3.getChannels() == 3 ? GL_RGB : GL_RGBA, GL_UNSIGNED_BYTE, textureCounter3.getData());
+		glGenerateMipmap(GL_TEXTURE_2D);
+	}
+	else 
+		std::cout << "Fallo la carga de textura" << std::endl;
+	textureCounter3.freeImage(); // Liberamos memoria
 
 	/*******************************************
 	 * OpenAL init
@@ -605,6 +681,10 @@ void destroy() {
 	glDeleteTextures(1, &textureInit1ID);
 	glDeleteTextures(1, &textureInit2ID);
 	glDeleteTextures(1, &textureScreenID);
+	glDeleteTextures(1, &textureCounter0ID);
+	glDeleteTextures(1, &textureCounter1ID);
+	glDeleteTextures(1, &textureCounter2ID);
+	glDeleteTextures(1, &textureCounter3ID);
 
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 	glDeleteFramebuffers(1, &depthMapFBO);
@@ -660,6 +740,7 @@ void mouseButtonCallback(GLFWwindow *window, int button, int state, int mod) {
 	}
 }
 
+
 bool processInput(bool continueApplication) {
 	if (exitApp || glfwWindowShouldClose(window) != 0) {
 		return false;
@@ -680,7 +761,26 @@ bool processInput(bool continueApplication) {
 		}
 		else if(glfwGetKey(window, GLFW_KEY_LEFT_CONTROL) == GLFW_RELEASE)
 			presionarOpcion = false;
+	} else {
+		switch(treasuresCollected) {
+			case 0:
+				textureActivaID = textureCounter0ID;
+				break;
+			case 1:
+				textureActivaID = textureCounter1ID;
+				break;
+			case 2:
+				textureActivaID = textureCounter2ID;
+				break;
+			case 3:
+				textureActivaID = textureCounter3ID;
+				break;
+			default:
+				std::cout << "Número de tesoros fuera de rango." << std::endl;
+				break;
+		}
 	}
+
 
 	if (glfwJoystickPresent(GLFW_JOYSTICK_1) == GL_TRUE) {
 		std::cout << "Esta presente el joystick" << std::endl;
@@ -905,34 +1005,29 @@ void renderAlphaScene(bool render = true){
 	std::map<float, std::pair<std::string, glm::vec3>> blendingSorted;
 	std::map<std::string, glm::vec3>::iterator itblend;
 
-	/**********
-	 * Render de las transparencias
-	 */
 	glEnable(GL_BLEND);
-	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-	glDisable(GL_CULL_FACE);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-	glEnable(GL_CULL_FACE);
-	glDisable(GL_BLEND);
+    if(render) {
+        shaderTexture.setMatrix4("projection", 1, false, glm::value_ptr(glm::mat4(1.0)));
+        shaderTexture.setMatrix4("view", 1, false, glm::value_ptr(glm::mat4(1.0)));
 
-	if(render){
-		/************Render de imagen de frente**************/
-		shaderTexture.setMatrix4("projection", 1, false, glm::value_ptr(glm::mat4(1.0)));
-		shaderTexture.setMatrix4("view", 1, false, glm::value_ptr(glm::mat4(1.0)));
-		glActiveTexture(GL_TEXTURE0);
-		glBindTexture(GL_TEXTURE_2D, textureActivaID);
-		shaderTexture.setInt("outTexture", 0);
-		glEnable(GL_BLEND);
-		boxIntro.render();
-		glDisable(GL_BLEND);
+        glActiveTexture(GL_TEXTURE0);
+        glBindTexture(GL_TEXTURE_2D, textureScreenID);
+        shaderTexture.setInt("outTexture", 0);
 
-		modelText->render("Texto en OpenGL", -1, 0);
-	}
+        boxIntro.render();
+        modelText->render("Texto en OpenGL", -1, 0);
+    }
+
+    glDisable(GL_BLEND);
+
+
 }
 
 void renderScene(){
 	renderSolidScene();
-	renderAlphaScene(false);
+	//renderAlphaScene(false);
 }
 
 void applicationLoop() {
@@ -1079,33 +1174,57 @@ void applicationLoop() {
 			shaderTerrain.setFloat("pointLights[" + std::to_string(i) + "].quadratic", 0.02);
 		}
 
-		//Para sombras
+		// Para sombras
 		shaderTerrain.setMatrix4("lightSpaceMatrix", 1, false, glm::value_ptr(lightSpaceMatrix));
 		shaderMulLighting.setMatrix4("lightSpaceMatrix", 1, false, glm::value_ptr(lightSpaceMatrix));
 
-		/************Render de imagen de frente**************/
-		if(!iniciaPartida){
-			shaderTexture.setMatrix4("projection", 1, false, glm::value_ptr(glm::mat4(1.0)));
-			shaderTexture.setMatrix4("view", 1, false, glm::value_ptr(glm::mat4(1.0)));
-			glActiveTexture(GL_TEXTURE0);
-			glBindTexture(GL_TEXTURE_2D, textureActivaID);
-			shaderTexture.setInt("outTexture", 0);
-			boxIntro.render();
-			glfwSwapBuffers(window);
-			continue;
-		}
-
 		// Render del buffer de profundidad desde el punto de vista de la luz
-		glClearColor(0.1f,0.1f,0.1f,1.0f);
+		glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-		// Render
+
+		// Configuración del viewport para el mapa de sombras
 		glViewport(0, 0, SHADOW_WIDTH, SHADOW_HEIGHT);
 		glBindFramebuffer(GL_FRAMEBUFFER, depthMapFBO);
 		glClear(GL_DEPTH_BUFFER_BIT);
+
+		// Preparar la escena para el renderizado del mapa de profundidad
 		prepareDepthScene();
 		renderScene();
+
+		// Desvincular el framebuffer después de renderizar
 		glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
+		// Render normal de los objetos
+		glViewport(0, 0, screenWidth, screenHeight);
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+		prepareScene();
+		glActiveTexture(GL_TEXTURE10);
+		glBindTexture(GL_TEXTURE_2D, depthMap);
+		shaderMulLighting.setInt("shadowMap", 10);
+		shaderTerrain.setInt("shadowMap", 10);
+		renderSolidScene();
+
+		// Habilitar blending para transparencia
+		glEnable(GL_BLEND);
+		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+		// Deshabilitar depth test para el GUI
+		glDisable(GL_DEPTH_TEST);
+
+		/************ Render de imagen de frente **************/    
+		shaderTexture.setMatrix4("projection", 1, false, glm::value_ptr(glm::mat4(1.0)));
+		shaderTexture.setMatrix4("view", 1, false, glm::value_ptr(glm::mat4(1.0)));
+		glActiveTexture(GL_TEXTURE0);
+		glBindTexture(GL_TEXTURE_2D, textureActivaID);
+		shaderTexture.setInt("outTexture", 0);
+		boxIntro.render();
+		glfwSwapBuffers(window);
+
+		// Restaurar el estado después de renderizar el GUI
+		glEnable(GL_DEPTH_TEST);
+		glDisable(GL_BLEND);
+
+		/*
 		// Para debug
 		glViewport(0,0, screenWidth, screenHeight);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -1118,16 +1237,8 @@ void applicationLoop() {
 		glBindTexture(GL_TEXTURE_2D, depthMap);
 		boxViewDepth.setScale(glm::vec3(2.0, 2.0, 1.0));
 		boxViewDepth.render();
+		*/
 
-		// Render normal de los objetos
-		glViewport(0,0,screenWidth,screenHeight);
-		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-		prepareScene();
-		glActiveTexture(GL_TEXTURE10);
-		glBindTexture(GL_TEXTURE_2D, depthMap);
-		shaderMulLighting.setInt("shadowMap", 10);
-		shaderTerrain.setInt("shadowMap", 10);
-		renderSolidScene();
 
 		/*******************************************
 		 * Creacion de colliders
@@ -1300,7 +1411,7 @@ void applicationLoop() {
 		/*******************************************
 		 * Render de colliders
 		 *******************************************/
-		
+		/*
 		for (std::map<std::string, std::tuple<AbstractModel::OBB, glm::mat4, glm::mat4> >::iterator it =
 				collidersOBB.begin(); it != collidersOBB.end(); it++) {
 			glm::mat4 matrixCollider = glm::mat4(1.0);
@@ -1322,7 +1433,7 @@ void applicationLoop() {
 			sphereCollider.render(matrixCollider);
 		}
 
-
+		*/
 		/*********************Prueba de colisiones****************************/
 		for (std::map<std::string,
 			std::tuple<AbstractModel::SBB, glm::mat4, glm::mat4>>::iterator it =
