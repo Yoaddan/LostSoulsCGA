@@ -60,6 +60,11 @@ class DLL_PUBLIC FontTypeRendering {
 	 */
 	double SCALEY;
 
+	/**
+	 * Color de la fuente
+	 */
+	float textColor[4];
+
 public:
 	/**
 	 * Constructor para el renderizado de texto en openGL.
@@ -67,26 +72,33 @@ public:
 	 * @param ScreenHeight Largo de ventana.
 	 */
 	FontTypeRendering(double ScreenWidth, double ScreenHeight);
+
 	/**
 	 * Inicialización del renderizado, este método carga el shader, los compila,
 	 * los enlaza al programa para los shaders, crea los buffers, carga las TTF
 	 * Y genera la textura para el renderizado.
 	 */
 	void Initialize();
+
 	/**
 	 * Método que renderiza un texto en el espacio de la pantalla.
 	 * @param str Cadena a renderizar.
 	 * @param x Coordenada en X.
 	 * @param y Coordenada en Y.
+	 * @param scale Escala del texto
+	 * @param color Color del texto
 	 */
-	void render(const std::string &str, float x, float y);
+	void render(const std::string &str, float x, float y, float scale = 1.0, const float color[4] = nullptr);
+
 	/**
 	 * Destructor de clase.
 	 */
 	virtual ~FontTypeRendering();
+
 private:
 	void render_text(const std::string &str, FT_Face face, float x, float y,
 			float sx, float sy);
+
 private:
 	GLuint texture, sampler;
 	GLuint vbo, vao;

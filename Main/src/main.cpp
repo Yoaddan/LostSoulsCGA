@@ -51,6 +51,8 @@
 // Modelo dinamico de una caja para las sombras
 #include "Headers/ShadowBox.h"
 
+#include <unistd.h> // Incluye la cabecera para la función sleep
+
 #define ARRAY_SIZE_IN_ELEMENTS(a) (sizeof(a)/sizeof(a[0]))
 
 int screenWidth;
@@ -106,7 +108,7 @@ ShadowBox * shadowBox;
 
 GLuint textureTerrainRID, textureTerrainGID, textureTerrainBID, textureTerrainBlendMapID;
 GLuint skyboxTextureID;
-GLuint textureInit1ID, textureInit2ID, textureActivaID, textureScreenID;
+GLuint textureInit1ID, textureInit2ID, textureActivaID, textureScreenID, textureGameOverID, textureWinID;
 GLuint textureCounter0ID, textureCounter1ID, textureCounter2ID, textureCounter3ID;
 
 int treasuresCollected = 0;
@@ -117,7 +119,7 @@ std::vector<std::string> collidersToRemove;
 std::map<std::string, bool> collisionDetection;
 
 
-bool iniciaPartida = false, presionarOpcion = false;
+bool iniciaPartida = false, presionarOpcion = false, finPartida = false;
 
 // Modelo para el render del texto
 FontTypeRendering::FontTypeRendering *modelText;
@@ -169,9 +171,16 @@ std::vector<float> torchesOrientation = {
 
 //Posicion tesoros
 std::vector<glm::vec3> tesorosPosition = {
+	// Posiciones reales
+	/*
 	glm::vec3(11.0, 0, 12.0), // 1er tesoro
 	glm::vec3(-6.5, 0, 29.5), // 2do tesoro
-	glm::vec3(23.0, 0, -11.5)   // 3er tesoro
+	glm::vec3(23.0, 0, -11.5)  // 3er tesoro*/
+	// Posiciones de debug
+	glm::vec3(29.8276, 0, 44.1803), // 1er tesoro
+	glm::vec3(36.4495, 0, 47.1476), // 2do tesoro
+	glm::vec3(44.9195, 0,42.7527)   // 3er tesoro
+	
 };
 // Orientación tesoros
 std::vector<float> tesorosOrientation = {
@@ -570,7 +579,7 @@ void init(int width, int height, std::string strTitle, bool bFullScreen) {
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR); // Filtering de maximimizacion
 	if(textureCounter0.getData()){
 		// Transferir los datos de la imagen a la tarjeta
-		glTexImage2D(GL_TEXTURE_2D, 0, textureCounter0.getChannels() == 3 ? GL_RGB : GL_RGBA, textureCounter0.getWidth(), textureIntro2.getHeight(), 0,
+		glTexImage2D(GL_TEXTURE_2D, 0, textureCounter0.getChannels() == 3 ? GL_RGB : GL_RGBA, textureCounter0.getWidth(), textureCounter0.getHeight(), 0,
 		textureCounter0.getChannels() == 3 ? GL_RGB : GL_RGBA, GL_UNSIGNED_BYTE, textureCounter0.getData());
 		glGenerateMipmap(GL_TEXTURE_2D);
 	}
@@ -588,7 +597,7 @@ void init(int width, int height, std::string strTitle, bool bFullScreen) {
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR); // Filtering de maximimizacion
 	if(textureCounter1.getData()){
 		// Transferir los datos de la imagen a la tarjeta
-		glTexImage2D(GL_TEXTURE_2D, 0, textureCounter1.getChannels() == 3 ? GL_RGB : GL_RGBA, textureCounter1.getWidth(), textureIntro2.getHeight(), 0,
+		glTexImage2D(GL_TEXTURE_2D, 0, textureCounter1.getChannels() == 3 ? GL_RGB : GL_RGBA, textureCounter1.getWidth(), textureCounter1.getHeight(), 0,
 		textureCounter1.getChannels() == 3 ? GL_RGB : GL_RGBA, GL_UNSIGNED_BYTE, textureCounter1.getData());
 		glGenerateMipmap(GL_TEXTURE_2D);
 	}
@@ -606,7 +615,7 @@ void init(int width, int height, std::string strTitle, bool bFullScreen) {
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR); // Filtering de maximimizacion
 	if(textureCounter2.getData()){
 		// Transferir los datos de la imagen a la tarjeta
-		glTexImage2D(GL_TEXTURE_2D, 0, textureCounter2.getChannels() == 3 ? GL_RGB : GL_RGBA, textureCounter2.getWidth(), textureIntro2.getHeight(), 0,
+		glTexImage2D(GL_TEXTURE_2D, 0, textureCounter2.getChannels() == 3 ? GL_RGB : GL_RGBA, textureCounter2.getWidth(), textureCounter2.getHeight(), 0,
 		textureCounter2.getChannels() == 3 ? GL_RGB : GL_RGBA, GL_UNSIGNED_BYTE, textureCounter2.getData());
 		glGenerateMipmap(GL_TEXTURE_2D);
 	}
@@ -624,13 +633,49 @@ void init(int width, int height, std::string strTitle, bool bFullScreen) {
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR); // Filtering de maximimizacion
 	if(textureCounter3.getData()){
 		// Transferir los datos de la imagen a la tarjeta
-		glTexImage2D(GL_TEXTURE_2D, 0, textureCounter3.getChannels() == 3 ? GL_RGB : GL_RGBA, textureCounter3.getWidth(), textureIntro2.getHeight(), 0,
+		glTexImage2D(GL_TEXTURE_2D, 0, textureCounter3.getChannels() == 3 ? GL_RGB : GL_RGBA, textureCounter3.getWidth(), textureCounter3.getHeight(), 0,
 		textureCounter3.getChannels() == 3 ? GL_RGB : GL_RGBA, GL_UNSIGNED_BYTE, textureCounter3.getData());
 		glGenerateMipmap(GL_TEXTURE_2D);
 	}
 	else 
 		std::cout << "Fallo la carga de textura" << std::endl;
 	textureCounter3.freeImage(); // Liberamos memoria
+
+	Texture textureGameOver("../Textures/GameOver.png");
+	textureGameOver.loadImage(); // Cargar la textura
+	glGenTextures(1, &textureGameOverID); // Creando el id de la textura del landingpad
+	glBindTexture(GL_TEXTURE_2D, textureGameOverID); // Se enlaza la textura
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT); // Wrapping en el eje u
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT); // Wrapping en el eje v
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR); // Filtering de minimización
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR); // Filtering de maximimizacion
+	if(textureGameOver.getData()){
+		// Transferir los datos de la imagen a la tarjeta
+		glTexImage2D(GL_TEXTURE_2D, 0, textureGameOver.getChannels() == 3 ? GL_RGB : GL_RGBA, textureGameOver.getWidth(), textureGameOver.getHeight(), 0,
+		textureGameOver.getChannels() == 3 ? GL_RGB : GL_RGBA, GL_UNSIGNED_BYTE, textureGameOver.getData());
+		glGenerateMipmap(GL_TEXTURE_2D);
+	}
+	else 
+		std::cout << "Fallo la carga de textura" << std::endl;
+	textureGameOver.freeImage(); // Liberamos memoria
+
+	Texture textureWin("../Textures/Victoria.png");
+	textureWin.loadImage(); // Cargar la textura
+	glGenTextures(1, &textureWinID); // Creando el id de la textura del landingpad
+	glBindTexture(GL_TEXTURE_2D, textureWinID); // Se enlaza la textura
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT); // Wrapping en el eje u
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT); // Wrapping en el eje v
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR); // Filtering de minimización
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR); // Filtering de maximimizacion
+	if(textureWin.getData()){
+		// Transferir los datos de la imagen a la tarjeta
+		glTexImage2D(GL_TEXTURE_2D, 0, textureWin.getChannels() == 3 ? GL_RGB : GL_RGBA, textureWin.getWidth(), textureWin.getHeight(), 0,
+		textureWin.getChannels() == 3 ? GL_RGB : GL_RGBA, GL_UNSIGNED_BYTE, textureWin.getData());
+		glGenerateMipmap(GL_TEXTURE_2D);
+	}
+	else 
+		std::cout << "Fallo la carga de textura" << std::endl;
+	textureWin.freeImage(); // Liberamos memoria
 
 	/*******************************************
 	 * OpenAL init
@@ -898,57 +943,96 @@ void mouseButtonCallback(GLFWwindow *window, int button, int state, int mod) {
 
 
 bool processInput(bool continueApplication) {
+	bool presionarEnter = false;
+	bool presionarOpcionInput = false;
+	bool presionarStart = false;
+	bool primeraVezWin = false;
+	
+	int buttonCount;
+
 	if (exitApp || glfwWindowShouldClose(window) != 0) {
 		return false;
 	}
 	
-	if(!iniciaPartida){
-		bool presionarEnter = glfwGetKey(window, GLFW_KEY_ENTER) == GLFW_PRESS;
-		if(textureActivaID == textureInit1ID && presionarEnter){
+	if (!iniciaPartida) {
+		// Comprobación de presionar Enter (teclado) o botón X (mando)
+		presionarEnter = glfwGetKey(window, GLFW_KEY_ENTER) == GLFW_PRESS || (glfwJoystickPresent(GLFW_JOYSTICK_1) && glfwGetJoystickButtons(GLFW_JOYSTICK_1, &buttonCount)[1] == GLFW_PRESS);
+		if (textureActivaID == textureInit1ID && presionarEnter) {
 			iniciaPartida = true;
 			textureActivaID = textureScreenID;
+		} else if(textureActivaID == textureInit2ID && presionarEnter){
+			exitApp = true;
+		} else {
+			// Comprobación de presionar CTRL izquierdo (teclado) o botón Cuadrado (mando)
+			presionarOpcionInput = glfwGetKey(window, GLFW_KEY_LEFT_CONTROL) == GLFW_PRESS || (glfwJoystickPresent(GLFW_JOYSTICK_1) && glfwGetJoystickButtons(GLFW_JOYSTICK_1, &buttonCount)[0] == GLFW_PRESS);
+			if (!presionarOpcion && presionarOpcionInput) {
+				presionarOpcion = true;
+				if (textureActivaID == textureInit1ID) {
+					textureActivaID = textureInit2ID;
+				} else if (textureActivaID == textureInit2ID) {
+					textureActivaID = textureInit1ID;
+				}
+			} else if (glfwGetKey(window, GLFW_KEY_LEFT_CONTROL) == GLFW_RELEASE || (glfwJoystickPresent(GLFW_JOYSTICK_1) && glfwGetJoystickButtons(GLFW_JOYSTICK_1, &buttonCount)[0] == GLFW_RELEASE)) {
+				presionarOpcion = false;
+			}
 		}
-		else if(!presionarOpcion && glfwGetKey(window, GLFW_KEY_LEFT_CONTROL) == GLFW_PRESS){
-			presionarOpcion = true;
-			if(textureActivaID == textureInit1ID)
-				textureActivaID = textureInit2ID;
-			else if(textureActivaID == textureInit2ID)
-				textureActivaID = textureInit1ID;
-		}
-		else if(glfwGetKey(window, GLFW_KEY_LEFT_CONTROL) == GLFW_RELEASE)
-			presionarOpcion = false;
 	} else {
-		switch(treasuresCollected) {
-			case 0:
-				textureActivaID = textureCounter0ID;
-				break;
-			case 1:
-				textureActivaID = textureCounter1ID;
-				break;
-			case 2:
-				textureActivaID = textureCounter2ID;
-				break;
-			case 3:
-				textureActivaID = textureCounter3ID;
-				break;
-			default:
-				std::cout << "Número de tesoros fuera de rango." << std::endl;
-				break;
+		if (finPartida) {
+			if(treasuresCollected == 3){
+				textureActivaID = textureWinID;
+			} else {
+				textureActivaID = textureGameOverID;
+			}
+			for(unsigned int i = 0; i < sourcesPlay.size(); i++){
+						sourcesPlay[i] = false;
+						alSourceStop(source[i]);
+						// Limpia el buffer asociado
+        				alSourcei(source[i], AL_BUFFER, 0);
+						// Verifica si hay algún error de OpenAL
+						ALenum error = alGetError();
+						if (error != AL_NO_ERROR)
+							std::cerr << "Error al detener la fuente " << i << ": " << error << std::endl;
+			}
+			// Comprobación de presionar Enter (teclado) o botón Start (mando)
+			presionarStart = glfwGetKey(window, GLFW_KEY_ENTER) == GLFW_PRESS || (glfwJoystickPresent(GLFW_JOYSTICK_1) && glfwGetJoystickButtons(GLFW_JOYSTICK_1, &buttonCount)[9] == GLFW_PRESS);
+			if (presionarStart) {
+				exitApp = true;
+			}
+		} else {
+			switch (treasuresCollected) {
+				case 0:
+					textureActivaID = textureCounter0ID;
+					break;
+				case 1:
+					textureActivaID = textureCounter1ID;
+					break;
+				case 2:
+					textureActivaID = textureCounter2ID;
+					break;
+				case 3:
+					textureActivaID = textureCounter3ID;
+					finPartida = true;
+					break;
+				default:
+					std::cout << "Número de tesoros fuera de rango." << std::endl;
+					break;
+			}
 		}
 	}
 
 
 	if (glfwJoystickPresent(GLFW_JOYSTICK_1) == GL_TRUE) {
-		std::cout << "Esta presente el joystick" << std::endl;
-		int axesCount, buttonCount;
+		//std::cout << "Esta presente el joystick" << std::endl;
+		int axesCount;
 		const float * axes = glfwGetJoystickAxes(GLFW_JOYSTICK_1, &axesCount);
-		std::cout << "Número de ejes disponibles :=>" << axesCount << std::endl;
+		//DEBUG ENTRADAS
+		/*std::cout << "Número de ejes disponibles :=>" << axesCount << std::endl;
 		std::cout << "Left Stick X axis: " << axes[0] << std::endl;
 		std::cout << "Left Stick Y axis: " << axes[1] << std::endl;
 		std::cout << "Left Trigger/L2: " << axes[3] << std::endl;
 		std::cout << "Right Stick X axis: " << axes[2] << std::endl;
 		std::cout << "Right Stick Y axis: " << axes[5] << std::endl;
-		std::cout << "Right Trigger/R2: " << axes[4] << std::endl;
+		std::cout << "Right Trigger/R2: " << axes[4] << std::endl;*/
 
 		if(fabs(axes[1]) > 0.2){
 			modelMatrixMainCharacter = glm::translate(modelMatrixMainCharacter, glm::vec3(0, 0, -axes[1] * 0.1));
@@ -972,47 +1056,16 @@ bool processInput(bool continueApplication) {
 			}
 		}
 
-		const unsigned char * buttons = glfwGetJoystickButtons(GLFW_JOYSTICK_1, &buttonCount);
+		//DEBUG BOTONES
+		/*const unsigned char * buttons = glfwGetJoystickButtons(GLFW_JOYSTICK_1, &buttonCount);
 		std::cout << "Número de botones disponibles :=>" << buttonCount << std::endl;
 		if(buttons[0] == GLFW_PRESS)
 			std::cout << "Se presiona cuadrado" << std::endl;
 		if(buttons[1] == GLFW_PRESS)
 			std::cout << "Se presiona X" << std::endl;
+		if(buttons[9] == GLFW_PRESS)
+			std::cout << "Se presiona Start" << std::endl;*/
 
-		if(!iniciaPartida){
-			bool presionarEnter = buttons[1] == GLFW_PRESS;
-			if(textureActivaID == textureInit1ID && presionarEnter){
-				iniciaPartida = true;
-				textureActivaID = textureScreenID;
-			}
-			else if(!presionarOpcion && buttons[0] == GLFW_PRESS){
-				presionarOpcion = true;
-				if(textureActivaID == textureInit1ID)
-					textureActivaID = textureInit2ID;
-				else if(textureActivaID == textureInit2ID)
-					textureActivaID = textureInit1ID;
-			}
-			else if(buttons[0] == GLFW_RELEASE)
-				presionarOpcion = false;
-		} else {
-			switch(treasuresCollected) {
-				case 0:
-					textureActivaID = textureCounter0ID;
-					break;
-				case 1:
-					textureActivaID = textureCounter1ID;
-					break;
-				case 2:
-					textureActivaID = textureCounter2ID;
-					break;
-				case 3:
-					textureActivaID = textureCounter3ID;
-					break;
-				default:
-					std::cout << "Número de tesoros fuera de rango." << std::endl;
-					break;
-			}
-		}
 
 	}
 
@@ -1242,44 +1295,9 @@ void renderSolidScene(){
 	glCullFace(oldCullFaceMode);
 	glDepthFunc(oldDepthFuncMode);
 }
-// Aqui van los objetos transparentes.
-void renderAlphaScene(bool render = true){
-	/**********Render de transparencias***************/
-	/**********
-	 * Update the position with alpha objects
-	 */
-	// Update the aircraft
-	//blendingUnsorted.find("aircraft")->second = glm::vec3(modelMatrixAircraft[3]);
-
-	/**********
-	 * Sorter with alpha objects
-	 */
-	std::map<float, std::pair<std::string, glm::vec3>> blendingSorted;
-	std::map<std::string, glm::vec3>::iterator itblend;
-
-	glEnable(GL_BLEND);
-    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-
-    if(render) {
-        shaderTexture.setMatrix4("projection", 1, false, glm::value_ptr(glm::mat4(1.0)));
-        shaderTexture.setMatrix4("view", 1, false, glm::value_ptr(glm::mat4(1.0)));
-
-        glActiveTexture(GL_TEXTURE0);
-        glBindTexture(GL_TEXTURE_2D, textureScreenID);
-        shaderTexture.setInt("outTexture", 0);
-
-        boxIntro.render();
-        modelText->render("Texto en OpenGL", -1, 0);
-    }
-
-    glDisable(GL_BLEND);
-
-
-}
 
 void renderScene(){
 	renderSolidScene();
-	renderAlphaScene(false);
 }
 
 void applicationLoop() {
@@ -1519,6 +1537,9 @@ void applicationLoop() {
 		glBindTexture(GL_TEXTURE_2D, textureActivaID);
 		shaderTexture.setInt("outTexture", 0);
 		boxIntro.render();
+		float colorText[4] = {1.0f, 0.0f, 0.0f, 0.5f}; // Rojo
+		if(iniciaPartida && !finPartida)
+			modelText->render("Recolecta los tesoros", -0.9, -0.8, 2.5, colorText);
 		//glfwSwapBuffers(window);
 
 		// Restaurar el estado después de renderizar el GUI
@@ -1770,7 +1791,7 @@ void applicationLoop() {
 		/*******************************************
 		 * Render de colliders
 		 *******************************************/
-		
+		/*
 		for (std::map<std::string, std::tuple<AbstractModel::OBB, glm::mat4, glm::mat4> >::iterator it =
 				collidersOBB.begin(); it != collidersOBB.end(); it++) {
 			glm::mat4 matrixCollider = glm::mat4(1.0);
@@ -1790,7 +1811,7 @@ void applicationLoop() {
 			sphereCollider.setColor(glm::vec4(1.0, 1.0, 1.0, 1.0));
 			sphereCollider.enableWireMode();
 			sphereCollider.render(matrixCollider);
-		}
+		}*/
 
 		
 		/*********************Prueba de colisiones****************************/
@@ -1834,15 +1855,15 @@ void applicationLoop() {
 			} else if (it->first == "fantasma") {
 				for (auto jt = collidersOBB.begin(); jt != collidersOBB.end(); ++jt) {
 					if (jt->first == "main" && testOBBOBB(std::get<0>(it->second), std::get<0>(jt->second))) {
-						std::cout << "El fantasma ha colisionado con el jugador. Cerrando el juego..." << std::endl;
-						exit(1); // Terminar el juego al detectar colisión con el fantasma
+						std::cout << "El fantasma ha colisionado con el jugador. GAME OVER" << std::endl;
+						finPartida = true;
 					}
 				}
 			} else if (it->first == "Guardia1" || it->first == "Guardia2" || it->first == "Guardia3") {
 				for (auto jt = collidersOBB.begin(); jt != collidersOBB.end(); ++jt) {
 					if (jt->first == "main" && testOBBOBB(std::get<0>(it->second), std::get<0>(jt->second))) {
-						std::cout << "El Guardia ha colisionado con el jugador. Cerrando el juego..." << std::endl;
-						exit(1); // Terminar el juego al detectar colisión con el fantasma
+						std::cout << "El Guardia ha colisionado con el jugador. GAME OVER" << std::endl;
+						finPartida = true;
 					}
 				}
 			}
@@ -2192,17 +2213,6 @@ void applicationLoop() {
 		listenerOri[4] = upModel.y;
 		listenerOri[5] = upModel.z;
 
-		// Listener for the First person camera
-		// listenerPos[0] = camera->getPosition().x;
-		// listenerPos[1] = camera->getPosition().y;
-		// listenerPos[2] = camera->getPosition().z;
-		// alListenerfv(AL_POSITION, listenerPos);
-		// listenerOri[0] = camera->getFront().x;
-		// listenerOri[1] = camera->getFront().y;
-		// listenerOri[2] = camera->getFront().z;
-		// listenerOri[3] = camera->getUp().x;
-		// listenerOri[4] = camera->getUp().y;
-		// listenerOri[5] = camera->getUp().z;
 		alListenerfv(AL_ORIENTATION, listenerOri);
 
 		for(unsigned int i = 0; i < sourcesPlay.size(); i++){

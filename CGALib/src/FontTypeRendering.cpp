@@ -40,6 +40,11 @@ const char *FontTypeRendering::FRAGMENT_SHADER = ""
 FontTypeRendering::FontTypeRendering(double ScreenWidth, double ScreenHeight) {
 	FontTypeRendering::SCALEX = 2.0 / ScreenWidth;
 	FontTypeRendering::SCALEY = 2.0 / ScreenHeight;
+	// Color por defecto: blanco
+	FontTypeRendering::textColor[0] = 1.0f;
+	FontTypeRendering::textColor[1] = 1.0f;
+	FontTypeRendering::textColor[2] = 1.0f;
+	FontTypeRendering::textColor[3] = 1.0f;
 }
 
 /**
@@ -48,7 +53,7 @@ FontTypeRendering::FontTypeRendering(double ScreenWidth, double ScreenHeight) {
 FontTypeRendering::~FontTypeRendering() {
 }
 /**
- * Inicializaci�n del renderizado, este m�todo carga el shader, los compila,
+ * Inicialización del renderizado, este método carga el shader, los compila,
  * los enlaza al programa para los shaders, crea los buffers, carga las TTF
  * Y genera la textura para el renderizado.
  */
@@ -71,13 +76,13 @@ void FontTypeRendering::Initialize() {
 		cleanup();
 		return exit(-1);
 	}
-	// Se le indica a dicha cara el archivo ttf que se utilizar�.
+	// Se le indica a dicha cara el archivo ttf que se utilizará.
 	if (FT_New_Face(ft_lib, "../Fonts/arial.ttf", 0, &face) != 0) {
 		std::cerr << "Unable to load arial.ttf\n";
 		cleanup();
 		return exit(-1);
 	}
-	// Inicializaci�n de los VBOs para la textura.
+	// Inicialización de los VBOs para la textura.
 	glGenBuffers(1, &vbo);
 	glGenVertexArrays(1, &vao);
 	glGenTextures(1, &texture);
@@ -86,7 +91,7 @@ void FontTypeRendering::Initialize() {
 	glSamplerParameteri(sampler, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 	glSamplerParameteri(sampler, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 	glSamplerParameteri(sampler, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-	// Inicializaci�n, compilaci�n y enlace de los shaders.
+	// Inicialización, compilación y enlace de los shaders.
 	vs = glCreateShader(GL_VERTEX_SHADER);
 	glShaderSource(vs, 1, &FontTypeRendering::VERTEX_SHADER, 0);
 	glCompileShader (vs);
@@ -109,12 +114,14 @@ void FontTypeRendering::Initialize() {
 }
 
 /**
- * M�todo que renderiza un texto en el espacio de la pantalla.
+ * Método que renderiza un texto en el espacio de la pantalla.
  * @param str Cadena a renderizar.
  * @param x Coordenada en X.
  * @param y Coordenada en Y.
+ * @param scale Escala del texto
+ * @param color Color del texto
  */
-void FontTypeRendering::render(const std::string &str, float x, float y) {
+void FontTypeRendering::render(const std::string &str, float x, float y, float scale, const float color[4]) {
 	// Se activa la unidad de textura.
 	glActiveTexture (GL_TEXTURE0);
 	// Se enalza hacia el tipo de textura.
@@ -125,21 +132,25 @@ void FontTypeRendering::render(const std::string &str, float x, float y) {
 	glBindBuffer(GL_ARRAY_BUFFER, vbo);
 	glUseProgram (program);
 	// Se envia el color de la fuente.
-	glUniform4f(colorUniform, 0.5, 1.0, 1.0, 1.0);
+	if (color) {
+		glUniform4f(colorUniform, color[0], color[1], color[2], color[3]);
+	} else {
+		glUniform4f(colorUniform, textColor[0], textColor[1], textColor[2], textColor[3]);
+	}
 	// Se envia la textura a utilizar.
 	glUniform1i(texUniform, 0);
-	// Se coloca el tama�o en Pixeles de la fuente.
+	// Se coloca el tamaño en Pixeles de la fuente.
 	FT_Set_Pixel_Sizes(face, 0, 12);
 	// Renderiza la fuente.
 	glEnable(GL_BLEND);
-	render_text(str, face, x, y, SCALEX, SCALEY);
+	render_text(str, face, x, y, SCALEX * scale, SCALEY * scale);
 	// Se desabilita el sample de textura.
 	glBindSampler(0, 0);
 	glDisable(GL_BLEND);
 }
 
 /**
- * M�todo que se encarga de renderizar la textura.
+ * Método que se encarga de renderizar la textura.
  * @param str Texto a dibujar.
  * @param face Cara TTF
  * @param x Coordenada x espacio de la pantalla.
@@ -165,7 +176,7 @@ void FontTypeRendering::render_text(const std::string &str, FT_Face face,
 				glyph->bitmap.rows, 0, GL_RED, GL_UNSIGNED_BYTE,
 				glyph->bitmap.buffer);
 
-		// Se generan las posiciones en el espaci� de la pantall.
+		// Se generan las posiciones en el espacio de la pantall.
 		const float vx = x + glyph->bitmap_left * sx;
 		const float vy = y + glyph->bitmap_top * sy;
 		// Se generan las escalas del mapeo.
