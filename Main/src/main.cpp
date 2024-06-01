@@ -20,7 +20,6 @@
 #include "Headers/Sphere.h"
 #include "Headers/Cylinder.h"
 #include "Headers/Box.h"
-#include "Headers/FirstPersonCamera.h"
 #include "Headers/ThirdPersonCamera.h"
 
 // Font rendering include
@@ -51,8 +50,6 @@
 // Modelo dinamico de una caja para las sombras
 #include "Headers/ShadowBox.h"
 
-#include <unistd.h> // Incluye la cabecera para la función sleep
-
 #define ARRAY_SIZE_IN_ELEMENTS(a) (sizeof(a)/sizeof(a[0]))
 
 int screenWidth;
@@ -82,7 +79,6 @@ float distanceFromTarget = 15.0;
 Sphere skyboxSphere(20, 20);
 Box boxCollider;
 Sphere sphereCollider(10, 10);
-Cylinder rayModel(10, 10, 1.0, 1.0, 1.0);
 Box boxIntro;
 Box boxViewDepth;
 
@@ -352,10 +348,6 @@ void init(int width, int height, std::string strTitle, bool bFullScreen) {
 	sphereCollider.init();
 	sphereCollider.setShader(&shader);
 	sphereCollider.setColor(glm::vec4(1.0, 1.0, 1.0, 1.0));
-
-	rayModel.init();
-	rayModel.setShader(&shader);
-	rayModel.setColor(glm::vec4(1.0));
 
 	boxIntro.init();
 	boxIntro.setShader(&shaderTexture);
@@ -853,7 +845,6 @@ void destroy() {
 	skyboxSphere.destroy();
 	boxCollider.destroy();
 	sphereCollider.destroy();
-	rayModel.destroy();
 	boxIntro.destroy();
 	boxViewDepth.destroy();
 
