@@ -45,6 +45,8 @@
 #include "Headers/Colisiones.h"
 
 // OpenAL include
+#include <AL/al.h>
+#include <AL/alc.h>
 #include <AL/alut.h>
 
 // Modelo dinamico de una caja para las sombras
@@ -389,7 +391,7 @@ void init(int width, int height, std::string strTitle, bool bFullScreen) {
 	hada.setShader(&shaderMulLighting);
 	
 	// Personaje principal
-	modelMainCharacter.loadModel("../models/PersonajePrincipal/PersonajePrincipal.obj");
+	modelMainCharacter.loadModel("../models/Personaje/Personaje.fbx");
 	modelMainCharacter.setShader(&shaderMulLighting);
 
 	// Terreno
@@ -686,6 +688,11 @@ void init(int width, int height, std::string strTitle, bool bFullScreen) {
 	}
 	// Generate buffers, or else no sound will happen!
 	alGenBuffers(NUM_BUFFERS, buffer);
+    if (alGetError() != AL_NO_ERROR) {
+        std::cerr << "- Error generating buffers !!\n";
+        exit(1);
+    }
+
 	//Buffer del fantasma
 	buffer[0] = alutCreateBufferFromFile("../sounds/fantasma.wav");
 	//Buffer del fuego
@@ -695,11 +702,11 @@ void init(int width, int height, std::string strTitle, bool bFullScreen) {
 	//Buffer de guardias
 	buffer[3] = alutCreateBufferFromFile("../sounds/guardia.wav");
 
-	int errorAlut = alutGetError();
-	if (errorAlut != ALUT_ERROR_NO_ERROR){
-		printf("- Error open files with alut %d !!\n", errorAlut);
-		exit(2);
-	}
+    int errorAlut = alutGetError();
+    if (errorAlut != ALUT_ERROR_NO_ERROR) {
+        std::cerr << "- Error open files with alut: " << alutGetErrorString(errorAlut) << " !!\n";
+        exit(2);
+    }
 
 	alGetError(); /* clear error */
 	alGenSources(NUM_SOURCES, source);
