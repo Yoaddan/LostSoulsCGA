@@ -75,7 +75,7 @@ Shader shaderDepth;
 Shader shaderViewDepth;
 
 std::shared_ptr<Camera> camera(new ThirdPersonCamera());
-float distanceFromTarget = 7.0;
+float distanceFromTarget = 15.0;
 
 Sphere skyboxSphere(20, 20);
 Box boxCollider;
@@ -88,10 +88,10 @@ Box boxViewDepth;
 Model laberinto; //Laberinto principal.
 Model fantasma; //Enemigo que atraviesa paredes.
 Model guardia1; //Enemigo con ruta predefinida.
-Model guardia2;
-Model guardia3;
+Model guardia2; //Enemigo con ruta predefinida.
+Model guardia3; //Enemigo con ruta predefinida.
 Model modelAntorcha; //Antorchas.
-Model tesoro;
+Model tesoro; // Tesoros a recoger.
 Model fuego; //Fuego animado.
 Model hada; //Hada.
 
@@ -191,22 +191,56 @@ std::map<std::string, std::tuple<AbstractModel::SBB, glm::mat4, glm::mat4> > col
 // Variables maquina de estados
 
 // OpenAL Defines
-#define NUM_BUFFERS 3
-#define NUM_SOURCES 3
+#define NUM_BUFFERS 4
+#define NUM_SOURCES 11
 #define NUM_ENVIRONMENTS 1
 // Listener
 ALfloat listenerPos[] = { 0.0, 0.0, 4.0 };
 ALfloat listenerVel[] = { 0.0, 0.0, 0.0 };
 ALfloat listenerOri[] = { 0.0, 0.0, 1.0, 0.0, 1.0, 0.0 };
-// Source 0 
+
+// Source 0 (Fantasma)
 ALfloat source0Pos[] = { 0.0, 0.0, 0.0 };
 ALfloat source0Vel[] = { 0.0, 0.0, 0.0 };
-// Source 1
+
+// Sonidos de fuego
+// Source 1 
 ALfloat source1Pos[] = { 0.0, 0.0, 0.0 };
 ALfloat source1Vel[] = { 0.0, 0.0, 0.0 };
 // Source 2
 ALfloat source2Pos[] = { 0.0, 0.0, 0.0 };
 ALfloat source2Vel[] = { 0.0, 0.0, 0.0 };
+// Source 3 
+ALfloat source3Pos[] = { 0.0, 0.0, 0.0 };
+ALfloat source3Vel[] = { 0.0, 0.0, 0.0 };
+// Source 4
+ALfloat source4Pos[] = { 0.0, 0.0, 0.0 };
+ALfloat source4Vel[] = { 0.0, 0.0, 0.0 };
+// Source 5 
+ALfloat source5Pos[] = { 0.0, 0.0, 0.0 };
+ALfloat source5Vel[] = { 0.0, 0.0, 0.0 };
+// Source 6
+ALfloat source6Pos[] = { 0.0, 0.0, 0.0 };
+ALfloat source6Vel[] = { 0.0, 0.0, 0.0 };
+
+// Musica de fondo
+// Source 7
+ALfloat source7Pos[] = { 0.0, 0.0, 0.0 };
+ALfloat source7Vel[] = { 0.0, 0.0, 0.0 };
+
+// Sonidos de guardias
+// Source 8
+ALfloat source8Pos[] = { 0.0, 0.0, 0.0 };
+ALfloat source8Vel[] = { 0.0, 0.0, 0.0 };
+
+// Source 9
+ALfloat source9Pos[] = { 0.0, 0.0, 0.0 };
+ALfloat source9Vel[] = { 0.0, 0.0, 0.0 };
+
+// Source 10
+ALfloat source10Pos[] = { 0.0, 0.0, 0.0 };
+ALfloat source10Vel[] = { 0.0, 0.0, 0.0 };
+
 // Buffers
 ALuint buffer[NUM_BUFFERS];
 ALuint source[NUM_SOURCES];
@@ -217,7 +251,8 @@ ALenum format;
 ALvoid *data;
 int ch;
 ALboolean loop;
-std::vector<bool> sourcesPlay = {true, true, true};
+//IMPORTANTE, inicializadores de sonidos
+std::vector<bool> sourcesPlay = {true, true, true, true, true, true, true, true, true, true, true};
 
 // Framesbuffers
 GLuint depthMap, depthMapFBO;
@@ -614,9 +649,15 @@ void init(int width, int height, std::string strTitle, bool bFullScreen) {
 	}
 	// Generate buffers, or else no sound will happen!
 	alGenBuffers(NUM_BUFFERS, buffer);
+	//Buffer del fantasma
 	buffer[0] = alutCreateBufferFromFile("../sounds/fantasma.wav");
-	buffer[1] = alutCreateBufferFromFile("../sounds/fire.wav");
-	buffer[2] = alutCreateBufferFromFile("../sounds/darth_vader.wav");
+	//Buffer del fuego
+	buffer[1] = alutCreateBufferFromFile("../sounds/fuego.wav");
+	//Buffer de fondo (Es estereo para que no le afecte el sonido espacial)
+	buffer[2] = alutCreateBufferFromFile("../sounds/background.wav"); 
+	//Buffer de guardias
+	buffer[3] = alutCreateBufferFromFile("../sounds/guardia.wav");
+
 	int errorAlut = alutGetError();
 	if (errorAlut != ALUT_ERROR_NO_ERROR){
 		printf("- Error open files with alut %d !!\n", errorAlut);
@@ -633,29 +674,101 @@ void init(int width, int height, std::string strTitle, bool bFullScreen) {
 	else {
 		printf("init - no errors after alGenSources\n");
 	}
-	alSourcef(source[0], AL_PITCH, 1.0f);
-	alSourcef(source[0], AL_GAIN, 0.3f);
+
+	// Modelo de OpenAL - IMPORTANTE
+	alDistanceModel(AL_LINEAR_DISTANCE_CLAMPED);
+
+	// Parametros sonido del fantasma
+	alSourcef(source[0], AL_PITCH, 1.5f);
+	alSourcef(source[0], AL_GAIN, 0.8f);
 	alSourcefv(source[0], AL_POSITION, source0Pos);
 	alSourcefv(source[0], AL_VELOCITY, source0Vel);
 	alSourcei(source[0], AL_BUFFER, buffer[0]);
 	alSourcei(source[0], AL_LOOPING, AL_TRUE);
-    alSourcef(source[0], AL_MAX_DISTANCE, 0.00000000000000000000000000001f);       // Distancia máxima en la que el sonido se escucha
+    alSourcef(source[0], AL_MAX_DISTANCE, 12.0f);  
 
+	// Parametros sonido del fuego
 	alSourcef(source[1], AL_PITCH, 1.0f);
 	alSourcef(source[1], AL_GAIN, 0.5f);
 	alSourcefv(source[1], AL_POSITION, source1Pos);
 	alSourcefv(source[1], AL_VELOCITY, source1Vel);
 	alSourcei(source[1], AL_BUFFER, buffer[1]);
 	alSourcei(source[1], AL_LOOPING, AL_TRUE);
-	alSourcef(source[1], AL_MAX_DISTANCE, 1000);
+	alSourcef(source[1], AL_MAX_DISTANCE, 15.0f);
 
 	alSourcef(source[2], AL_PITCH, 1.0f);
-	alSourcef(source[2], AL_GAIN, 0.3f);
+	alSourcef(source[2], AL_GAIN, 0.5f);
 	alSourcefv(source[2], AL_POSITION, source2Pos);
 	alSourcefv(source[2], AL_VELOCITY, source2Vel);
-	alSourcei(source[2], AL_BUFFER, buffer[2]);
+	alSourcei(source[2], AL_BUFFER, buffer[1]);
 	alSourcei(source[2], AL_LOOPING, AL_TRUE);
-	alSourcef(source[2], AL_MAX_DISTANCE, 2000);
+	alSourcef(source[2], AL_MAX_DISTANCE, 15.0f);
+
+	alSourcef(source[3], AL_PITCH, 1.0f);
+	alSourcef(source[3], AL_GAIN, 0.5f);
+	alSourcefv(source[3], AL_POSITION, source3Pos);
+	alSourcefv(source[3], AL_VELOCITY, source3Vel);
+	alSourcei(source[3], AL_BUFFER, buffer[1]);
+	alSourcei(source[3], AL_LOOPING, AL_TRUE);
+	alSourcef(source[3], AL_MAX_DISTANCE, 15.0f);
+
+	alSourcef(source[4], AL_PITCH, 1.0f);
+	alSourcef(source[4], AL_GAIN, 0.5f);
+	alSourcefv(source[4], AL_POSITION, source4Pos);
+	alSourcefv(source[4], AL_VELOCITY, source4Vel);
+	alSourcei(source[4], AL_BUFFER, buffer[1]);
+	alSourcei(source[4], AL_LOOPING, AL_TRUE);
+	alSourcef(source[4], AL_MAX_DISTANCE, 15.0f);
+
+	alSourcef(source[5], AL_PITCH, 1.0f);
+	alSourcef(source[5], AL_GAIN, 0.5f);
+	alSourcefv(source[5], AL_POSITION, source5Pos);
+	alSourcefv(source[5], AL_VELOCITY, source5Vel);
+	alSourcei(source[5], AL_BUFFER, buffer[1]);
+	alSourcei(source[5], AL_LOOPING, AL_TRUE);
+	alSourcef(source[5], AL_MAX_DISTANCE, 15.0f);
+
+	alSourcef(source[6], AL_PITCH, 1.0f);
+	alSourcef(source[6], AL_GAIN, 0.5f);
+	alSourcefv(source[6], AL_POSITION, source6Pos);
+	alSourcefv(source[6], AL_VELOCITY, source6Vel);
+	alSourcei(source[6], AL_BUFFER, buffer[1]);
+	alSourcei(source[6], AL_LOOPING, AL_TRUE);
+	alSourcef(source[6], AL_MAX_DISTANCE, 15.0f);
+
+	// Parametros sonido del background
+	alSourcef(source[7], AL_PITCH, 1.0f);
+	alSourcef(source[7], AL_GAIN, 0.03f);
+	alSourcefv(source[7], AL_POSITION, source7Pos);
+	alSourcefv(source[7], AL_VELOCITY, source7Vel);
+	alSourcei(source[7], AL_BUFFER, buffer[2]);
+	alSourcei(source[7], AL_LOOPING, AL_TRUE);
+	alSourcef(source[7], AL_MAX_DISTANCE, 2000.0f);
+
+	// Parametros sonido de los guardias
+	alSourcef(source[8], AL_PITCH, 1.0f);
+	alSourcef(source[8], AL_GAIN, 0.5f);
+	alSourcefv(source[8], AL_POSITION, source8Pos);
+	alSourcefv(source[8], AL_VELOCITY, source8Vel);
+	alSourcei(source[8], AL_BUFFER, buffer[3]);
+	alSourcei(source[8], AL_LOOPING, AL_TRUE);
+	alSourcef(source[8], AL_MAX_DISTANCE, 10.0f);
+
+	alSourcef(source[9], AL_PITCH, 1.0f);
+	alSourcef(source[9], AL_GAIN, 0.5f);
+	alSourcefv(source[9], AL_POSITION, source9Pos);
+	alSourcefv(source[9], AL_VELOCITY, source9Vel);
+	alSourcei(source[9], AL_BUFFER, buffer[3]);
+	alSourcei(source[9], AL_LOOPING, AL_TRUE);
+	alSourcef(source[9], AL_MAX_DISTANCE, 10.0f);
+
+	alSourcef(source[10], AL_PITCH, 1.0f);
+	alSourcef(source[10], AL_GAIN, 0.5f);
+	alSourcefv(source[10], AL_POSITION, source10Pos);
+	alSourcefv(source[10], AL_VELOCITY, source10Vel);
+	alSourcei(source[10], AL_BUFFER, buffer[3]);
+	alSourcei(source[10], AL_LOOPING, AL_TRUE);
+	alSourcef(source[10], AL_MAX_DISTANCE, 10.0f);
 
 	// Inicializar el frameBuffer para almacenar la profundidad del render desde el punto de vista de la luz.
 	glGenFramebuffers(1, &depthMapFBO);
@@ -788,7 +901,7 @@ bool processInput(bool continueApplication) {
 	if (exitApp || glfwWindowShouldClose(window) != 0) {
 		return false;
 	}
-
+	
 	if(!iniciaPartida){
 		bool presionarEnter = glfwGetKey(window, GLFW_KEY_ENTER) == GLFW_PRESS;
 		if(textureActivaID == textureInit1ID && presionarEnter){
@@ -848,13 +961,58 @@ bool processInput(bool continueApplication) {
 		if(fabs(axes[2]) > 0.2){
 			camera->mouseMoveCamera(axes[2], 0.0, deltaTime);
 		}if(fabs(axes[5]) > 0.2){
-			camera->mouseMoveCamera(0.0, axes[5], deltaTime);
+			if (axes[5] >= 0) {
+				// Permitir el movimiento hacia arriba sin restricciones
+				camera->mouseMoveCamera(0.0, axes[5], deltaTime);
+			} else {
+				// Mueve la cámara hacia abajo solo si la altura actual es mayor que el límite mínimo
+				if (camera->getPosition().y > 2.0) {
+					camera->mouseMoveCamera(0.0, axes[5], deltaTime);
+				}
+			}
 		}
 
 		const unsigned char * buttons = glfwGetJoystickButtons(GLFW_JOYSTICK_1, &buttonCount);
 		std::cout << "Número de botones disponibles :=>" << buttonCount << std::endl;
 		if(buttons[0] == GLFW_PRESS)
 			std::cout << "Se presiona cuadrado" << std::endl;
+		if(buttons[1] == GLFW_PRESS)
+			std::cout << "Se presiona X" << std::endl;
+
+		if(!iniciaPartida){
+			bool presionarEnter = buttons[1] == GLFW_PRESS;
+			if(textureActivaID == textureInit1ID && presionarEnter){
+				iniciaPartida = true;
+				textureActivaID = textureScreenID;
+			}
+			else if(!presionarOpcion && buttons[0] == GLFW_PRESS){
+				presionarOpcion = true;
+				if(textureActivaID == textureInit1ID)
+					textureActivaID = textureInit2ID;
+				else if(textureActivaID == textureInit2ID)
+					textureActivaID = textureInit1ID;
+			}
+			else if(buttons[0] == GLFW_RELEASE)
+				presionarOpcion = false;
+		} else {
+			switch(treasuresCollected) {
+				case 0:
+					textureActivaID = textureCounter0ID;
+					break;
+				case 1:
+					textureActivaID = textureCounter1ID;
+					break;
+				case 2:
+					textureActivaID = textureCounter2ID;
+					break;
+				case 3:
+					textureActivaID = textureCounter3ID;
+					break;
+				default:
+					std::cout << "Número de tesoros fuera de rango." << std::endl;
+					break;
+			}
+		}
 
 	}
 
@@ -868,18 +1026,18 @@ bool processInput(bool continueApplication) {
 
 	// Controles de personaje principal
 	if (glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS){
-		modelMatrixMainCharacter = glm::rotate(modelMatrixMainCharacter, 0.10f, glm::vec3(0, 1, 0));
+		modelMatrixMainCharacter = glm::rotate(modelMatrixMainCharacter, 0.22f, glm::vec3(0, 1, 0));
 		animationMainCharacterIndex = 0;
 	} else if (glfwGetKey(window, GLFW_KEY_RIGHT) == GLFW_PRESS){
-		modelMatrixMainCharacter = glm::rotate(modelMatrixMainCharacter, -0.10f, glm::vec3(0, 1, 0));
+		modelMatrixMainCharacter = glm::rotate(modelMatrixMainCharacter, -0.22f, glm::vec3(0, 1, 0));
 		animationMainCharacterIndex = 0;
 	}
 	if (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS){
-		modelMatrixMainCharacter = glm::translate(modelMatrixMainCharacter, glm::vec3(0.0, 0.0, 0.5));
+		modelMatrixMainCharacter = glm::translate(modelMatrixMainCharacter, glm::vec3(0.0, 0.0, 1.02));
 		animationMainCharacterIndex = 0;
 	}
 	else if (glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS){
-		modelMatrixMainCharacter = glm::translate(modelMatrixMainCharacter, glm::vec3(0.0, 0.0,-0.5));
+		modelMatrixMainCharacter = glm::translate(modelMatrixMainCharacter, glm::vec3(0.0, 0.0, -1.02));
 		animationMainCharacterIndex = 0;
 	}
 
@@ -1009,10 +1167,6 @@ void renderSolidScene(){
 		}
 	}
 
-
-
-
-
 	/*****************************************
 	 * Objetos animados por huesos
 	 * **************************************/
@@ -1025,12 +1179,11 @@ void renderSolidScene(){
 	modelMatrixMainCharacter[2] = glm::vec4(ejez, 0.0);
 	modelMatrixMainCharacter[3][1] = terrain.getHeightTerrain(modelMatrixMainCharacter[3][0], modelMatrixMainCharacter[3][2]);
 	glm::mat4 modelMatrixMainCharacterBody = glm::mat4(modelMatrixMainCharacter);
-	//modelMatrixMainCharacterBody = glm::scale(modelMatrixMainCharacterBody, glm::vec3(0.021f)); //Se debe comentar despues
 	modelMainCharacter.setAnimationIndex(animationMainCharacterIndex);
 	modelMainCharacter.render(modelMatrixMainCharacterBody);
 
 	modelMatrixHada = modelMatrixMainCharacter;
-	modelMatrixHada = glm::translate(modelMatrixHada, glm::vec3(0.174625f,1.552f, -0.5f));
+	modelMatrixHada = glm::translate(modelMatrixHada, glm::vec3(0.174625f, 1.552f + 0.05f * sin(currTime * 2.0f), -0.5f));
 	hada.render(modelMatrixHada);
 
 	modelMatrixGuardia1[3][1] = terrain.getHeightTerrain(modelMatrixGuardia1[3][0], modelMatrixGuardia1[3][2]);
@@ -1045,29 +1198,31 @@ void renderSolidScene(){
 	glm::mat4 modelMatrixGuardia3Body = glm::mat4(modelMatrixGuardia3);
 	guardia3.render(modelMatrixGuardia3Body);
 
-	// Interpolación lineal para mover el fantasma hacia la posición de Mayow
-	float interpolationFactor = 0.001f; // Ajusta este valor para cambiar la velocidad de seguimiento
-	glm::vec3 newPositionFantasma = glm::mix(glm::vec3(modelMatrixFantasma[3]), glm::vec3(modelMatrixMainCharacter[3]), interpolationFactor);
+	if(iniciaPartida){// Validacion de inicio de partida
 
-	// Calcular la dirección hacia Mayow y ajustar la orientación del fantasma
-	glm::vec3 directionFantasma = glm::normalize(glm::vec3(modelMatrixMainCharacter[3]) - newPositionFantasma);
-	glm::vec3 upFantasma = glm::vec3(0.0f, 1.0f, 0.0f);
-	glm::vec3 rightFantasma = glm::normalize(glm::cross(upFantasma, directionFantasma));
-	upFantasma = glm::cross(directionFantasma, rightFantasma);
+		// Interpolación lineal para mover el fantasma hacia la posición del jugador
+		float interpolationFactor = 0.0006f; // Valor para cambiar la velocidad de seguimiento
+		glm::vec3 newPositionFantasma = glm::mix(glm::vec3(modelMatrixFantasma[3]), glm::vec3(modelMatrixMainCharacter[3]), interpolationFactor);
+		// Calcular la dirección hacia Mayow y ajustar la orientación del fantasma
+		glm::vec3 directionFantasma = glm::normalize(glm::vec3(modelMatrixMainCharacter[3]) - newPositionFantasma);
+		glm::vec3 upFantasma = glm::vec3(0.0f, 1.0f, 0.0f);
+		glm::vec3 rightFantasma = glm::normalize(glm::cross(upFantasma, directionFantasma));
+		upFantasma = glm::cross(directionFantasma, rightFantasma);
 
-	glm::mat4 rotationMatrixFantasma = glm::mat4(1.0f);
-	rotationMatrixFantasma[0] = glm::vec4(rightFantasma, 0.0f);
-	rotationMatrixFantasma[1] = glm::vec4(upFantasma, 0.0f);
-	rotationMatrixFantasma[2] = glm::vec4(directionFantasma, 0.0f);
-/*
-	// Actualizar la posición y orientación del fantasma
-	modelMatrixFantasma[3] = glm::vec4(newPositionFantasma, 1.0f);
-	modelMatrixFantasma = glm::translate(glm::mat4(1.0f), newPositionFantasma) * rotationMatrixFantasma;
+		glm::mat4 rotationMatrixFantasma = glm::mat4(1.0f);
+		rotationMatrixFantasma[0] = glm::vec4(rightFantasma, 0.0f);
+		rotationMatrixFantasma[1] = glm::vec4(upFantasma, 0.0f);
+		rotationMatrixFantasma[2] = glm::vec4(directionFantasma, 0.0f);
 
-*/
-	modelMatrixFantasma[3][1] = terrain.getHeightTerrain(modelMatrixFantasma[3][0], modelMatrixFantasma[3][2]);
-	glm::mat4 modelMatrixFantasmaBody = glm::mat4(modelMatrixFantasma);
-	fantasma.render(modelMatrixFantasmaBody);
+		// Actualizar la posición y orientación del fantasma
+		modelMatrixFantasma[3] = glm::vec4(newPositionFantasma, 1.0f);
+		modelMatrixFantasma = glm::translate(glm::mat4(1.0f), newPositionFantasma) * rotationMatrixFantasma;
+		modelMatrixFantasma[3][1] = terrain.getHeightTerrain(modelMatrixFantasma[3][0], modelMatrixFantasma[3][2]);
+		modelMatrixFantasma[3][1] += 0.05f * cos(currTime * 1.5f); // Movimiento aleatorio cosenoidal
+		glm::mat4 modelMatrixFantasmaBody = glm::mat4(modelMatrixFantasma);
+		fantasma.render(modelMatrixFantasmaBody);
+		
+	}
 
 	laberinto.render(modelMatrixLaberinto);
 
@@ -1128,13 +1283,13 @@ void renderScene(){
 }
 
 void applicationLoop() {
-	
 	bool psi = true;
 
 	glm::vec3 axis;
 	glm::vec3 target;
 	float angleTarget;
 
+	// Valores para maquinas de estados de guardias.
 	int stateG1 = 0;
 	float avanceG1 = 0.05;
 	float maxAvanceG1 = 0.0;
@@ -1158,7 +1313,6 @@ void applicationLoop() {
 
 	// Posiciones y estados iniciales.
 	modelMatrixMainCharacter = glm::translate(modelMatrixMainCharacter, glm::vec3(34.677f, 0.05f, 37.0987f));
-	//modelMatrixMainCharacter = glm::translate(modelMatrixMainCharacter, glm::vec3(25.0f, 0.05f, 0.7f));
 	modelMatrixMainCharacter = glm::rotate(modelMatrixMainCharacter, glm::radians(-90.0f), glm::vec3(0, 1, 0));
 
 	//Guardias
@@ -1263,13 +1417,13 @@ void applicationLoop() {
 		 * Propiedades Luz direccional
 		 *******************************************/
 		shaderMulLighting.setVectorFloat3("viewPos", glm::value_ptr(camera->getPosition()));
-		shaderMulLighting.setVectorFloat3("directionalLight.light.ambient", glm::value_ptr(glm::vec3(0.5, 0.5, 0.5)));
+		shaderMulLighting.setVectorFloat3("directionalLight.light.ambient", glm::value_ptr(glm::vec3(0.0, 0.0, 0.0)));
 		shaderMulLighting.setVectorFloat3("directionalLight.light.diffuse", glm::value_ptr(glm::vec3(0.1, 0.1, 0.1)));
 		shaderMulLighting.setVectorFloat3("directionalLight.light.specular", glm::value_ptr(glm::vec3(0.0, 0.0, 0.0)));
 		shaderMulLighting.setVectorFloat3("directionalLight.direction", glm::value_ptr(glm::vec3(-0.7071, -0.7071, -0.7071)));
 
 		shaderTerrain.setVectorFloat3("viewPos", glm::value_ptr(camera->getPosition()));
-		shaderTerrain.setVectorFloat3("directionalLight.light.ambient", glm::value_ptr(glm::vec3(0.5, 0.5, 0.5)));
+		shaderTerrain.setVectorFloat3("directionalLight.light.ambient", glm::value_ptr(glm::vec3(0.0, 0.0, 0.0)));
 		shaderTerrain.setVectorFloat3("directionalLight.light.diffuse", glm::value_ptr(glm::vec3(0.1, 0.1, 0.1)));
 		shaderTerrain.setVectorFloat3("directionalLight.light.specular", glm::value_ptr(glm::vec3(0.0, 0.0, 0.0)));
 		shaderTerrain.setVectorFloat3("directionalLight.direction", glm::value_ptr(glm::vec3(-0.7071, -0.7071, -0.7071)));
@@ -1307,14 +1461,14 @@ void applicationLoop() {
 		matrixAdjustFairy = glm::translate(matrixAdjustFairy, glm::vec3(modelMatrixHada[3]));
 		glm::vec3 FairyPosition = glm::vec3(matrixAdjustFairy[3]);
 		shaderMulLighting.setVectorFloat3("pointLights[" + std::to_string(torchesPosition.size()) + "].light.ambient", glm::value_ptr(glm::vec3(0.1, 0.1, 0.1)));
-		shaderMulLighting.setVectorFloat3("pointLights[" + std::to_string(torchesPosition.size()) + "].light.diffuse", glm::value_ptr(glm::vec3(0.1, 0.1, 0.1)));
+		shaderMulLighting.setVectorFloat3("pointLights[" + std::to_string(torchesPosition.size()) + "].light.diffuse", glm::value_ptr(glm::vec3(0.15, 0.15, 0.15)));
 		shaderMulLighting.setVectorFloat3("pointLights[" + std::to_string(torchesPosition.size()) + "].light.specular", glm::value_ptr(glm::vec3(0.1, 0.1, 0.1)));
 		shaderMulLighting.setVectorFloat3("pointLights[" + std::to_string(torchesPosition.size()) + "].position", glm::value_ptr(FairyPosition));
 		shaderMulLighting.setFloat("pointLights[" + std::to_string(torchesPosition.size()) + "].constant", 1.0);
 		shaderMulLighting.setFloat("pointLights[" + std::to_string(torchesPosition.size()) + "].linear", 0.09);
 		shaderMulLighting.setFloat("pointLights[" + std::to_string(torchesPosition.size()) + "].quadratic", 0.02);
 		shaderTerrain.setVectorFloat3("pointLights[" + std::to_string(torchesPosition.size()) + "].light.ambient", glm::value_ptr(glm::vec3(0.1, 0.1, 0.1)));
-		shaderTerrain.setVectorFloat3("pointLights[" + std::to_string(torchesPosition.size()) + "].light.diffuse", glm::value_ptr(glm::vec3(0.1, 0.1, 0.1)));
+		shaderTerrain.setVectorFloat3("pointLights[" + std::to_string(torchesPosition.size()) + "].light.diffuse", glm::value_ptr(glm::vec3(0.15, 0.15, 0.15)));
 		shaderTerrain.setVectorFloat3("pointLights[" + std::to_string(torchesPosition.size()) + "].light.specular", glm::value_ptr(glm::vec3(0.1, 0.1, 0.1)));
 		shaderTerrain.setVectorFloat3("pointLights[" + std::to_string(torchesPosition.size()) + "].position", glm::value_ptr(FairyPosition));
 		shaderTerrain.setFloat("pointLights[" + std::to_string(torchesPosition.size()) + "].constant", 1.0);
@@ -1371,7 +1525,6 @@ void applicationLoop() {
 		glEnable(GL_DEPTH_TEST);
 		glDisable(GL_BLEND);
 
-		
 		/*
 		// Para debug
 		glViewport(0,0, screenWidth, screenHeight);
@@ -1571,7 +1724,7 @@ void applicationLoop() {
 		fantasmaCollider.e = fantasma.getObb().e * glm::vec3(1.0, 1.0, 1.0);
 		fantasmaCollider.c = glm::vec3(modelmatrixColliderFantasma[3]);
 		addOrUpdateColliders(collidersOBB, "fantasma", fantasmaCollider, modelMatrixFantasma);
-//abcdef
+
 		//Collider Guardia 1
 		AbstractModel::OBB coliderGuardia1;
 		glm::mat4 modelMatrixColliderGuardia1 = glm::mat4(modelMatrixGuardia1);
@@ -1586,7 +1739,7 @@ void applicationLoop() {
 		coliderGuardia1.c = glm::vec3(modelMatrixColliderGuardia1[3]);
 		addOrUpdateColliders(collidersOBB, "Guardia1", coliderGuardia1, modelMatrixGuardia1);
 
-				//Collider Guardia 2
+		//Collider Guardia 2
 		AbstractModel::OBB coliderGuardia2;
 		glm::mat4 modelMatrixColliderGuardia2 = glm::mat4(modelMatrixGuardia2);
 		// Set the orientation of collider before doing the scale
@@ -1600,9 +1753,9 @@ void applicationLoop() {
 		coliderGuardia2.c = glm::vec3(modelMatrixColliderGuardia2[3]);
 		addOrUpdateColliders(collidersOBB, "Guardia2", coliderGuardia2, modelMatrixGuardia2);
 
-				//Collider Guardia 3
+		//Collider Guardia 3
 		AbstractModel::OBB coliderGuardia3;
-		glm::mat4 modelMatrixColliderGuardia3 = glm::mat4(modelMatrixGuardia1);
+		glm::mat4 modelMatrixColliderGuardia3 = glm::mat4(modelMatrixGuardia3);
 		// Set the orientation of collider before doing the scale
 		coliderGuardia3.u = glm::quat_cast(modelMatrixColliderGuardia3);
 		modelMatrixColliderGuardia3 = glm::scale(modelMatrixColliderGuardia3, glm::vec3(1.0, 1.0, 1.0));
@@ -1617,7 +1770,7 @@ void applicationLoop() {
 		/*******************************************
 		 * Render de colliders
 		 *******************************************/
-		/*
+		
 		for (std::map<std::string, std::tuple<AbstractModel::OBB, glm::mat4, glm::mat4> >::iterator it =
 				collidersOBB.begin(); it != collidersOBB.end(); it++) {
 			glm::mat4 matrixCollider = glm::mat4(1.0);
@@ -1637,7 +1790,7 @@ void applicationLoop() {
 			sphereCollider.setColor(glm::vec4(1.0, 1.0, 1.0, 1.0));
 			sphereCollider.enableWireMode();
 			sphereCollider.render(matrixCollider);
-		}*/
+		}
 
 		
 		/*********************Prueba de colisiones****************************/
@@ -1685,7 +1838,7 @@ void applicationLoop() {
 						exit(1); // Terminar el juego al detectar colisión con el fantasma
 					}
 				}
-			}else if (it->first == "Guardia1" || it->first == "Guardia2" || it->first == "Guardia3") {
+			} else if (it->first == "Guardia1" || it->first == "Guardia2" || it->first == "Guardia3") {
 				for (auto jt = collidersOBB.begin(); jt != collidersOBB.end(); ++jt) {
 					if (jt->first == "main" && testOBBOBB(std::get<0>(it->second), std::get<0>(jt->second))) {
 						std::cout << "El Guardia ha colisionado con el jugador. Cerrando el juego..." << std::endl;
@@ -1761,26 +1914,6 @@ void applicationLoop() {
 				}
 			}
 		}
-
-		// Esto es para ilustrar la transformacion inversa de los coliders
-		/*glm::vec3 cinv = glm::inverse(mayowCollider.u) * glm::vec4(rockCollider.c, 1.0);
-		glm::mat4 invColliderS = glm::mat4(1.0);
-		invColliderS = glm::translate(invColliderS, cinv);
-		invColliderS =  invColliderS * glm::mat4(mayowCollider.u);
-		invColliderS = glm::scale(invColliderS, glm::vec3(rockCollider.ratio * 2.0, rockCollider.ratio * 2.0, rockCollider.ratio * 2.0));
-		sphereCollider.setColor(glm::vec4(1.0, 1.0, 0.0, 1.0));
-		sphereCollider.enableWireMode();
-		sphereCollider.render(invColliderS);
-		glm::vec3 cinv2 = glm::inverse(mayowCollider.u) * glm::vec4(mayowCollider.c, 1.0);
-		glm::mat4 invColliderB = glm::mat4(1.0);
-		invColliderB = glm::translate(invColliderB, cinv2);
-		invColliderB = glm::scale(invColliderB, mayowCollider.e * 2.0f);
-		boxCollider.setColor(glm::vec4(1.0, 1.0, 0.0, 1.0));
-		boxCollider.enableWireMode();
-		boxCollider.render(invColliderB);
-		// Se regresa el color blanco
-		sphereCollider.setColor(glm::vec4(1.0, 1.0, 1.0, 1.0));
-		boxCollider.setColor(glm::vec4(1.0, 1.0, 1.0, 1.0));*/
 		
 		/**********Maquinas de estado*************/
 		//Guardia 1
@@ -1973,6 +2106,7 @@ void applicationLoop() {
 		default:
 			break;
 		}
+		
 		//Para saber la posicion del personaje
 		//std::cout << " x " << modelMatrixMainCharacter[3].x << " y " << modelMatrixMainCharacter[3].y << " z " << modelMatrixMainCharacter[3].z << std::endl;
 
@@ -1988,10 +2122,59 @@ void applicationLoop() {
 		/****************************+
 		 * Open AL sound data
 		 */
+
+		// Posición de sonido de fantasma
 		source0Pos[0] = modelMatrixFantasma[3].x;
 		source0Pos[1] = modelMatrixFantasma[3].y;
 		source0Pos[2] = modelMatrixFantasma[3].z;
 		alSourcefv(source[0], AL_POSITION, source0Pos);
+
+		// Posición de sonido de fuego
+		source1Pos[0] = torchesPosition[0].x;
+		source1Pos[1] = torchesPosition[0].y + 1.05;
+		source1Pos[2] = torchesPosition[0].z;
+		alSourcefv(source[1], AL_POSITION, source1Pos);
+
+		source2Pos[0] = torchesPosition[1].x;
+		source2Pos[1] = torchesPosition[1].y + 1.05;
+		source2Pos[2] = torchesPosition[1].z;
+		alSourcefv(source[2], AL_POSITION, source2Pos);
+
+		source3Pos[0] = torchesPosition[2].x;
+		source3Pos[1] = torchesPosition[2].y + 1.05;
+		source3Pos[2] = torchesPosition[2].z;
+		alSourcefv(source[3], AL_POSITION, source3Pos);
+
+		source4Pos[0] = torchesPosition[3].x;
+		source4Pos[1] = torchesPosition[3].y + 1.05;
+		source4Pos[2] = torchesPosition[3].z;
+		alSourcefv(source[4], AL_POSITION, source4Pos);
+
+		source5Pos[0] = torchesPosition[4].x;
+		source5Pos[1] = torchesPosition[4].y + 1.05;
+		source5Pos[2] = torchesPosition[4].z;
+		alSourcefv(source[5], AL_POSITION, source5Pos);
+
+		source6Pos[0] = torchesPosition[5].x;
+		source6Pos[1] = torchesPosition[5].y + 1.05;
+		source6Pos[2] = torchesPosition[5].z;
+		alSourcefv(source[6], AL_POSITION, source6Pos);
+
+		// Posiciones de sonidos de guardias
+		source8Pos[0] = modelMatrixGuardia1[3].x;
+		source8Pos[1] = modelMatrixGuardia1[3].y;
+		source8Pos[2] = modelMatrixGuardia1[3].z;
+		alSourcefv(source[8], AL_POSITION, source8Pos);
+		
+		source9Pos[0] = modelMatrixGuardia2[3].x;
+		source9Pos[1] = modelMatrixGuardia2[3].y;
+		source9Pos[2] = modelMatrixGuardia2[3].z;
+		alSourcefv(source[9], AL_POSITION, source9Pos);
+		
+		source10Pos[0] = modelMatrixGuardia3[3].x;
+		source10Pos[1] = modelMatrixGuardia3[3].y;
+		source10Pos[2] = modelMatrixGuardia3[3].z;
+		alSourcefv(source[10], AL_POSITION, source10Pos);
 
 		// Listener for the Thris person camera
 		listenerPos[0] = modelMatrixMainCharacter[3].x;
