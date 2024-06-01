@@ -169,9 +169,9 @@ std::vector<float> torchesOrientation = {
 
 //Posicion tesoros
 std::vector<glm::vec3> tesorosPosition = {
-	glm::vec3(29.8276, 0, 44.1803), // 1er tesoro
-	glm::vec3(36.4495, 0, 47.1476), // 2do tesoro
-	glm::vec3(44.9195, 0,42.7527)   // 3er tesoro
+	glm::vec3(11.0, 0, 12.0), // 1er tesoro
+	glm::vec3(-6.5, 0, 29.5), // 2do tesoro
+	glm::vec3(23.0, 0, -11.5)   // 3er tesoro
 };
 // Orientación tesoros
 std::vector<float> tesorosOrientation = {
