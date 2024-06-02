@@ -170,15 +170,15 @@ std::vector<float> torchesOrientation = {
 //Posicion tesoros
 std::vector<glm::vec3> tesorosPosition = {
 	// Posiciones reales
-	/*
 	glm::vec3(11.0, 0, 12.0), // 1er tesoro
 	glm::vec3(-6.5, 0, 29.5), // 2do tesoro
-	glm::vec3(23.0, 0, -11.5)  // 3er tesoro*/
+	glm::vec3(23.0, 0, -11.5)  // 3er tesoro
 	// Posiciones de debug
+	/*
 	glm::vec3(29.8276, 0, 44.1803), // 1er tesoro
 	glm::vec3(36.4495, 0, 47.1476), // 2do tesoro
 	glm::vec3(44.9195, 0,42.7527)   // 3er tesoro
-	
+	*/
 };
 // Orientación tesoros
 std::vector<float> tesorosOrientation = {
@@ -367,11 +367,11 @@ void init(int width, int height, std::string strTitle, bool bFullScreen) {
 	fantasma.setShader(&shaderMulLighting);
 
 	// Guardia
-	guardia1.loadModel("../models/Guardia/c1530.obj");
+	guardia1.loadModel("../models/Guardia/Guardia.fbx");
 	guardia1.setShader(&shaderMulLighting);
-	guardia2.loadModel("../models/Guardia/c1530.obj");
+	guardia2.loadModel("../models/Guardia/Guardia.fbx");
 	guardia2.setShader(&shaderMulLighting);
-	guardia3.loadModel("../models/Guardia/c1530.obj");
+	guardia3.loadModel("../models/Guardia/Guardia.fbx");
 	guardia3.setShader(&shaderMulLighting);
 
 	// Antorcha
@@ -1726,7 +1726,7 @@ void applicationLoop() {
 				glm::vec3(modelMainCharacter.getObb().c.x,
 						modelMainCharacter.getObb().c.y,
 						modelMainCharacter.getObb().c.z));
-		mainCharacterCollider.e = modelMainCharacter.getObb().e * glm::vec3(1.0, 1.0, 1.01) * glm::vec3(0.787401574, 0.787401574, 0.787401574);
+		mainCharacterCollider.e = modelMainCharacter.getObb().e * glm::vec3(1.0, 1.0, 1.0) * glm::vec3(0.4, 0.787401574, 1.0);
 		mainCharacterCollider.c = glm::vec3(modelmatrixColliderMainCharacter[3]);
 		addOrUpdateColliders(collidersOBB, "main", mainCharacterCollider, modelMatrixMainCharacter);
 
@@ -1754,7 +1754,7 @@ void applicationLoop() {
 				glm::vec3(guardia1.getObb().c.x,
 						guardia1.getObb().c.y,
 						guardia1.getObb().c.z));
-		coliderGuardia1.e = guardia1.getObb().e * glm::vec3(1.0, 1.0, 1.0);
+		coliderGuardia1.e = guardia1.getObb().e * glm::vec3(0.9, 1.0, 1.0);
 		coliderGuardia1.c = glm::vec3(modelMatrixColliderGuardia1[3]);
 		addOrUpdateColliders(collidersOBB, "Guardia1", coliderGuardia1, modelMatrixGuardia1);
 
@@ -1768,7 +1768,7 @@ void applicationLoop() {
 				glm::vec3(guardia2.getObb().c.x,
 						guardia2.getObb().c.y,
 						guardia2.getObb().c.z));
-		coliderGuardia2.e = guardia2.getObb().e * glm::vec3(1.0, 1.0, 1.0);
+		coliderGuardia2.e = guardia2.getObb().e * glm::vec3(0.9, 1.0, 1.0);
 		coliderGuardia2.c = glm::vec3(modelMatrixColliderGuardia2[3]);
 		addOrUpdateColliders(collidersOBB, "Guardia2", coliderGuardia2, modelMatrixGuardia2);
 
@@ -1782,14 +1782,14 @@ void applicationLoop() {
 				glm::vec3(guardia3.getObb().c.x,
 						guardia3.getObb().c.y,
 						guardia3.getObb().c.z));
-		coliderGuardia3.e = guardia3.getObb().e * glm::vec3(1.0, 1.0, 1.0);
+		coliderGuardia3.e = guardia3.getObb().e * glm::vec3(0.9, 1.0, 1.0);
 		coliderGuardia3.c = glm::vec3(modelMatrixColliderGuardia3[3]);
 		addOrUpdateColliders(collidersOBB, "Guardia3", coliderGuardia3, modelMatrixGuardia3);
 
 		/*******************************************
 		 * Render de colliders
 		 *******************************************/
-		/*
+		
 		for (std::map<std::string, std::tuple<AbstractModel::OBB, glm::mat4, glm::mat4> >::iterator it =
 				collidersOBB.begin(); it != collidersOBB.end(); it++) {
 			glm::mat4 matrixCollider = glm::mat4(1.0);
@@ -1809,7 +1809,7 @@ void applicationLoop() {
 			sphereCollider.setColor(glm::vec4(1.0, 1.0, 1.0, 1.0));
 			sphereCollider.enableWireMode();
 			sphereCollider.render(matrixCollider);
-		}*/
+		}
 
 		
 		/*********************Prueba de colisiones****************************/
