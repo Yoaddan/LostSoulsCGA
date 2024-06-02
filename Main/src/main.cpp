@@ -1789,7 +1789,7 @@ void applicationLoop() {
 		/*******************************************
 		 * Render de colliders
 		 *******************************************/
-		
+		/*
 		for (std::map<std::string, std::tuple<AbstractModel::OBB, glm::mat4, glm::mat4> >::iterator it =
 				collidersOBB.begin(); it != collidersOBB.end(); it++) {
 			glm::mat4 matrixCollider = glm::mat4(1.0);
@@ -1809,7 +1809,7 @@ void applicationLoop() {
 			sphereCollider.setColor(glm::vec4(1.0, 1.0, 1.0, 1.0));
 			sphereCollider.enableWireMode();
 			sphereCollider.render(matrixCollider);
-		}
+		}*/
 
 		
 		/*********************Prueba de colisiones****************************/
